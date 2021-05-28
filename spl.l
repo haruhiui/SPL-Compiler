@@ -7,6 +7,7 @@ extern "C" int yywrap() {return 1;}
 %}
 
 %%
+\/\/.*\n		{ ; }
 [ \t\n]			{ ; }
 \'.\' { 
 	yylval.cVal = yytext[1];

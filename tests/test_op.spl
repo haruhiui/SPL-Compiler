@@ -1,0 +1,10 @@
+program test_op; 
+
+begin 
+    writeln("test operators"); 
+    writeln(iv + 3); 
+    writeln(iv - 3); 
+    writeln(iv * 3); 
+    writeln(iv / 3); 
+    writeln(iv mod 3); 
+end. 

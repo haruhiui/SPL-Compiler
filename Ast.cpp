@@ -572,7 +572,9 @@ llvm::Value *ProcedureCall::codeGen(Generator & generator) {
         }
         argIt++;
     }
-    llvm::Value* res = TheBuilder.CreateCall(function, args, "calltmp");
+    // llvm::Value* res = TheBuilder.CreateCall(function, args, "calltmp"); 
+    // procedure must return a value if we use the last sentence, but procedure must not return anything in SPL. 
+    llvm::Value* res = TheBuilder.CreateCall(function, args);
     this->backward(generator);
     return res;
 }

@@ -103,8 +103,9 @@ extern int yydebug;
     SYS_PROC = 309,
     SYS_TYPE = 310,
     READ = 311,
-    REAL = 312,
-    CHAR = 313
+    STRING = 312,
+    REAL = 313,
+    CHAR = 314
   };
 #endif
 
@@ -171,7 +172,7 @@ union YYSTYPE
 	CaseExprList *caseExprList;
 	CompoundStatement *compoundStatement;
 
-#line 175 "y.tab.hpp"
+#line 176 "y.tab.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;
