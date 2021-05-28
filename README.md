@@ -23,8 +23,10 @@ spl < test.spl
 lli output.ll 
 
 // generate executable object file: 
-llc output.o
-clang output.s 
+clang output.o
+
+// execute the file
+./a.out
 ```
 
 ## DAG visualization 
