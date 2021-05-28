@@ -2,15 +2,19 @@
 
 lex + yacc + llvm 
 
-usage: `make` 
-
 environment: 
 * Ubuntu 20.04 
 * flex 2.6.4 
 * bison 3.5.1 
 * llvm 10.0.0 
 
-## Execute IR 
+## Compile compiler
+
+```
+make
+```
+
+## Compile SPL programs and Execute 
 
 ```
 spl < test.pas 
@@ -37,4 +41,5 @@ todo
 ## Reference 
 
 [llvm tutorila](https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/index.html) 
-[SPL-Compiler by czyxm](https://github.com/czyxm/SPL-Compiler)
+
+<!-- [SPL-Compiler by czyxm](https://github.com/czyxm/SPL-Compiler) -->
