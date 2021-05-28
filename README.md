@@ -15,6 +15,7 @@ environment:
 ```
 spl < test.pas 
 lli output.ll 
+// or llc output.o and clang output.s 
 ```
 
 ## DAG visualization 
