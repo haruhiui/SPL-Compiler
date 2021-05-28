@@ -14,8 +14,13 @@ environment:
 
 ```
 spl < test.pas 
+
+// execute IR directly: 
 lli output.ll 
-// or llc output.o and clang output.s 
+
+// generate executable object file: 
+llc output.o
+clang output.s 
 ```
 
 ## DAG visualization 
