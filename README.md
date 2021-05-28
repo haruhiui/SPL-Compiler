@@ -42,7 +42,7 @@ todo
 
 [llvm tutorila](https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/index.html) 
 
-<!-- [SPL-Compiler by czyxm](https://github.com/czyxm/SPL-Compiler) -->
+[SPL-Compiler by czyxm](https://github.com/czyxm/SPL-Compiler)
 
 ## 
 * 5.26 
