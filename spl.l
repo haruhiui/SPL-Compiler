@@ -13,16 +13,18 @@ extern "C" int yywrap() {return 1;}
 	yylval.cVal = yytext[1];
 	return CHAR; 
 }
+	/* operator and delimeter*/
 "("				{ return LP; }
 ")"				{ return RP; }
 "["				{ return LB; }
 "]"				{ return RB; }
-".."			{ return DOTDOT; }
+".."			{ return DOTDOT; }   /* DOTDOT has higher privilege than DOT*/
 "."				{ return DOT; }
 ","				{ return COMMA; }
 ":"				{ return COLON; }
 "*"				{ return MUL; }
 "/"				{ return DIV; }
+"%"				{ return MOD; }
 "<>"			{ return UNEQUAL; }
 "not"			{ return NOT; }
 "+"				{ return PLUS; }
