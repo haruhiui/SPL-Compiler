@@ -38,7 +38,10 @@ dot *.dot -T png -o dag.png
 
 ## AST visualization 
 
-todo
+```
+python ParseTreeVisualizer.py tree.json # tree.json can be omitted, by default
+
+```
 
 ## Reference 
 
@@ -46,7 +49,11 @@ todo
 
 [SPL-Compiler by czyxm](https://github.com/czyxm/SPL-Compiler)
 
-## 
+## TODO
+
+* Allow function be defined in a function
+
+## Time Line
 
 * 5.26 
     * able to run 
@@ -55,3 +62,5 @@ todo
 * 5.28 
     * solved: support comments by adding '//' at the start of the comments 
     * solved: procedure must not return anything 
+* 5.30
+    * add: able to generate parse tree picture

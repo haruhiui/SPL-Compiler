@@ -5,9 +5,7 @@ using namespace std;
 
 void Generator::generate(Program& astRoot)
 {
-    cout << "[INFO] " << "IR generation begin..." << endl;
     astRoot.codeGen(*this);
-    cout << "[INFO] " << "IR generation finished." << endl;
 
     // Initialize the target registry etc.
     llvm::InitializeAllTargetInfos();

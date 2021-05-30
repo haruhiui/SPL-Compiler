@@ -1,10 +1,10 @@
 
 """
-Usage:  python AstVisualizer.py <json file path>
+Usage:  python ParseTreeVisualizer.py <json file path>
         
         By default, it will directly find "tree.json" in the current path,
         therefore, you can simply use 
-            python AstVisualizer.py
+            python ParseTreeVisualizer.py
         to generate the png file.
 """
 import os

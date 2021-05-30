@@ -57,25 +57,25 @@ extern int yydebug;
     COMMA = 263,
     COLON = 264,
     MUL = 265,
-    UNEQUAL = 266,
-    NOT = 267,
-    PLUS = 268,
-    MINUS = 269,
-    GE = 270,
-    GT = 271,
-    LE = 272,
-    LT = 273,
-    EQUAL = 274,
-    ASSIGN = 275,
-    MOD = 276,
-    DOTDOT = 277,
-    SEMI = 278,
-    AND = 279,
-    ARRAY = 280,
-    TOKEN_BEGIN = 281,
-    CASE = 282,
-    CONST = 283,
-    DIV = 284,
+    DIV = 266,
+    UNEQUAL = 267,
+    NOT = 268,
+    PLUS = 269,
+    MINUS = 270,
+    GE = 271,
+    GT = 272,
+    LE = 273,
+    LT = 274,
+    EQUAL = 275,
+    ASSIGN = 276,
+    MOD = 277,
+    DOTDOT = 278,
+    SEMI = 279,
+    AND = 280,
+    ARRAY = 281,
+    TOKEN_BEGIN = 282,
+    CASE = 283,
+    CONST = 284,
     DO = 285,
     DOWNTO = 286,
     ELSE = 287,
@@ -84,27 +84,31 @@ extern int yydebug;
     FUNCTION = 290,
     GOTO = 291,
     IF = 292,
-    OF = 293,
-    OR = 294,
-    PROCEDURE = 295,
-    PROGRAM = 296,
-    RECORD = 297,
-    REPEAT = 298,
-    THEN = 299,
-    TO = 300,
-    TYPE = 301,
-    UNTIL = 302,
-    VAR = 303,
-    WHILE = 304,
-    INTEGER = 305,
-    IDENTIFIER = 306,
-    SYS_CON = 307,
-    SYS_FUNCT = 308,
-    SYS_PROC = 309,
-    SYS_TYPE = 310,
-    READ = 311,
-    REAL = 312,
-    CHAR = 313
+    IN = 293,
+    OF = 294,
+    OR = 295,
+    PACKED = 296,
+    PROCEDURE = 297,
+    PROGRAM = 298,
+    RECORD = 299,
+    REPEAT = 300,
+    SET = 301,
+    THEN = 302,
+    TO = 303,
+    TYPE = 304,
+    UNTIL = 305,
+    VAR = 306,
+    WHILE = 307,
+    WITH = 308,
+    INTEGER = 309,
+    ID = 310,
+    SYS_CON = 311,
+    SYS_FUNCT = 312,
+    SYS_PROC = 313,
+    SYS_TYPE = 314,
+    READ = 315,
+    REAL = 316,
+    CHAR = 317
   };
 #endif
 
@@ -157,6 +161,7 @@ union YYSTYPE
 	CaseStatement *caseStatement;
 	CaseExpression *caseExpression;
 	GotoStatement *gotoStatement;
+	CompoundStatement *compoundStatement;
 
 	ExpressionList *expressionList;
 	StatementList *statementList;
@@ -169,9 +174,9 @@ union YYSTYPE
 	RoutineList *routineList;
 	ArgsList *argsList;
 	CaseExprList *caseExprList;
-	CompoundStatement *compoundStatement;
+	
 
-#line 175 "y.tab.hpp"
+#line 180 "y.tab.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

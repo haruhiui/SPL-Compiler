@@ -28,7 +28,6 @@
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/DynamicLibrary.h>
 #include <llvm/Target/TargetMachine.h>
-
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/STLExtras.h"
@@ -41,7 +40,6 @@
 #include "llvm/Support/Host.h" 
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Target/TargetOptions.h"
-//#include <llvm/Support/Debug.h>
 
 static std::unique_ptr<llvm::LLVMContext> TheContext = std::make_unique<llvm::LLVMContext>();
 static llvm::IRBuilder<> TheBuilder(*TheContext);

@@ -59,6 +59,7 @@ Program *root;
 	CaseStatement *caseStatement;
 	CaseExpression *caseExpression;
 	GotoStatement *gotoStatement;
+	CompoundStatement *compoundStatement;
 
 	ExpressionList *expressionList;
 	StatementList *statementList;
@@ -71,21 +72,21 @@ Program *root;
 	RoutineList *routineList;
 	ArgsList *argsList;
 	CaseExprList *caseExprList;
-	CompoundStatement *compoundStatement;
+	
 }
 
-%token  LP RP LB RB DOT COMMA COLON
-		MUL UNEQUAL NOT PLUS MINUS
-		GE GT LE LT EQUAL ASSIGN MOD DOTDOT
-		SEMI
-		AND ARRAY TOKEN_BEGIN CASE CONST
-		DIV DO DOWNTO ELSE END
-		FOR FUNCTION GOTO
-		IF OF OR
-		PROCEDURE PROGRAM RECORD REPEAT
-		THEN TO TYPE UNTIL VAR WHILE
+%token  LP RP LB RB DOT COMMA COLON MUL DIV UNEQUAL NOT
+%token  PLUS MINUS GE GT LE LT EQUAL ASSIGN MOD DOTDOT SEMI
+%token	AND ARRAY TOKEN_BEGIN CASE CONST
+%token	DO DOWNTO ELSE END
+%token	FOR FUNCTION GOTO IF IN
+%token  OF OR PACKED
+%token	PROCEDURE PROGRAM RECORD REPEAT SET
+%token	THEN TO TYPE UNTIL VAR 
+%token  WHILE WITH
+
 %token<iVal> INTEGER
-%token<sVal> IDENTIFIER SYS_CON SYS_FUNCT SYS_PROC SYS_TYPE READ
+%token<sVal> ID SYS_CON SYS_FUNCT SYS_PROC SYS_TYPE READ
 %token<dVal> REAL
 %token<cVal> CHAR
 
@@ -129,9 +130,8 @@ Program *root;
 %start program
 %%
 
-// 
 name
-	: IDENTIFIER 
+	: ID
 	{ 
 		$$ = new Identifier($1); 
 	}
@@ -146,7 +146,7 @@ program
 	;
 
 program_head
-	: PROGRAM IDENTIFIER SEMI 
+	: PROGRAM ID SEMI 
 	{ 
 		$$ = $2; 
 	}
@@ -159,7 +159,8 @@ routine
 		$$->setRoutineBody($2); 
 	}
 	;
-
+ 
+ /* label part here*/
 routine_head
 	: const_part type_part var_part routine_part 
 	{ 

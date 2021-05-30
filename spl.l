@@ -26,7 +26,6 @@ extern "C" int yywrap() {return 1;}
 "/"				{ return DIV; }
 "%"				{ return MOD; }
 "<>"			{ return UNEQUAL; }
-"not"			{ return NOT; }
 "+"				{ return PLUS; }
 "-"				{ return MINUS; }
 ">="			{ return GE; }
@@ -35,8 +34,9 @@ extern "C" int yywrap() {return 1;}
 "<"				{ return LT; }
 "="				{ return EQUAL; }
 ":="			{ return ASSIGN; }
-"mod"			{ return MOD; }
 ";"				{ return SEMI; }
+
+	/* keyword list*/
 "and"			{ return AND; }
 "array"			{ return ARRAY; }
 "begin"			{ return TOKEN_BEGIN; }
@@ -51,35 +51,45 @@ extern "C" int yywrap() {return 1;}
 "function"		{ return FUNCTION; }
 "goto"			{ return GOTO; }
 "if"			{ return IF; }
+"in"			{ return IN; }
+"mod"			{ return MOD; }
+"not"			{ return NOT; }
 "of"			{ return OF; }
 "or"			{ return OR; }
+"packed"		{ return PACKED; }
 "procedure"		{ return PROCEDURE; }
 "program"		{ return PROGRAM; }
 "record"		{ return RECORD; }
 "repeat"		{ return REPEAT; }
+"set"			{ return SET; }
 "then"			{ return THEN; }
 "to"			{ return TO; }
 "type"			{ return TYPE; }
 "until"			{ return UNTIL; }
 "var"			{ return VAR; }
 "while"			{ return WHILE; }
+"with"			{ return WITH; }
 
-"boolean"|"char"|"integer"|"real" {
-	yylval.sVal = new std::string(yytext, yyleng); 
-	return SYS_TYPE; 
-}
-"abs"|"chr"|"odd"|"ord"|"pred"|"sqr"|"sqrt"|"succ" {
-	yylval.sVal = new std::string(yytext, yyleng); 
-	return SYS_FUNCT; 
-}
 "false"|"maxint"|"true" {
 	yylval.sVal = new std::string(yytext, yyleng); 
 	return SYS_CON; 
 }
+
+"abs"|"chr"|"odd"|"ord"|"pred"|"sqr"|"sqrt"|"succ" {
+	yylval.sVal = new std::string(yytext, yyleng); 
+	return SYS_FUNCT; 
+}
+
 "write"|"writeln" { 
 	yylval.sVal = new std::string(yytext, yyleng);
 	return SYS_PROC; 
 }
+
+"boolean"|"char"|"integer"|"real"|"string" {
+	yylval.sVal = new std::string(yytext, yyleng); 
+	return SYS_TYPE; 
+}
+
 "read" { 
 	yylval.sVal = new std::string(yytext, yyleng);
 	return READ; 
