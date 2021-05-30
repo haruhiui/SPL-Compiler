@@ -4,6 +4,8 @@
 #include "y.tab.hpp"
 
 extern int yyparse();
+
+// Defined in spl.y
 extern Program *root;
 
 int main(int argc, char **argv) 

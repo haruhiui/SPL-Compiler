@@ -1,10 +1,12 @@
 program test_op; 
-
+const
+    iv = 26;
 begin 
-    writeln("test operators"); 
+   // writeln("test operators"); 
     writeln(iv + 3); 
     writeln(iv - 3); 
     writeln(iv * 3); 
     writeln(iv / 3); 
-    writeln(iv mod 3); 
-end. 
+    writeln(iv % 3); 
+end
+. 
