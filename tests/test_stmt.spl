@@ -48,7 +48,7 @@ begin
 end; 
 
 begin  
-    // test_if(2); 
-    // test_case(0); 
+    test_if(2); 
+    test_case(0); 
 end 
 .
