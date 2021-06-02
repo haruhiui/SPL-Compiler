@@ -78,10 +78,10 @@ enum BuildInType
 class Node
 {
 public:
-    // 用于llvm生成中间代码
+    // generate intermediate code for llvm
     virtual llvm::Value *codeGen(Generator & generator) = 0;
 
-    // 用于生成AST可视化需要的Json数据
+    // generate json data for visualization
     virtual string getJson(){return "";};
 
     virtual ~Node() { }

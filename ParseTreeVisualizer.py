@@ -2,7 +2,7 @@
 """
 Usage:  python ParseTreeVisualizer.py <json file path>
         
-        By default, it will directly find "tree.json" in the current path,
+        By default, it will directly find "parseTree.json" in the current path,
         therefore, you can simply use 
             python ParseTreeVisualizer.py
         to generate the png file.
@@ -14,7 +14,7 @@ import json
 node_count = 0
 def check_file():
     if len(sys.argv) < 2:
-        filename = 'tree.json'
+        filename = 'parseTree.json'
     else:
         filename = sys.argv[1]
     if os.path.exists(filename):

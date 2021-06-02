@@ -6,8 +6,8 @@ flex_out = lex.yy.cpp
 bison_file = spl.y 
 bison_out_h = y.tab.hpp  
 bison_out_c = y.tab.cpp 
-objs = main.o Ast.o Generator.o IntegerVal.o lex.yy.o y.tab.o 
-cpps = main.cpp Ast.cpp Generator.cpp IntegerVal.cpp lex.yy.cpp y.tab.cpp 
+objs = main.o Ast.o Generator.o lex.yy.o y.tab.o 
+cpps = main.cpp Ast.cpp Generator.cpp lex.yy.cpp y.tab.cpp 
 
 # -fexceptions solves: error: cannot use 'throw' with exceptions disabled
 # clang: warning: -lLLVM-10: 'linker' input unused [-Wunused-command-line-argument]

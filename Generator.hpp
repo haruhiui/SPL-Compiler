@@ -61,9 +61,9 @@ public:
         TheAddrSpace = TheModule->getDataLayout().getAllocaAddrSpace();
     }
     
-    void generate(Program& astRoot);
-    llvm::GenericValue run();
-    llvm::ExecutionEngine* genExeEngine();
+    void generate(Program& parseTreeRoot);
+    // llvm::GenericValue run();
+    // llvm::ExecutionEngine* genExeEngine();
     
     llvm::Value* findValue(const std::string & name) {
         llvm::Value * result = nullptr;

@@ -1,9 +1,7 @@
 make
 for filename in `ls *.spl`
 do
-    ./spl < $filename
-    clang output.o
+    ./spl $filename
     echo "\nNow run '$filename'"
     ./a.out
 done
-make clean

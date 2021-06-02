@@ -3,9 +3,11 @@
 
 using namespace std;
 
-void Generator::generate(Program& astRoot)
+void Generator::generate(Program& parseTreeRoot)
 {
-    astRoot.codeGen(*this);
+    // parseTreeRoot has been set up during previous procedures
+    // Now codeGen will recursively generate intermediate code
+    parseTreeRoot.codeGen(*this);
 
     // Initialize the target registry etc.
     llvm::InitializeAllTargetInfos();
@@ -72,40 +74,39 @@ void Generator::generate(Program& astRoot)
 
     // llvm::outs() << "Wrote llvm IR to " << filename2 << " and you can run it by: lli " << filename2 << "\n"; 
 
-    llvm::outs() << "Wrote object file: output.o, and llvm IR file: output.ll" << "\n"; 
-    llvm::outs() << "You can run by 'lli output.ll' directly." << "\n"; 
-    llvm::outs() << "Or you can get the executable file by 'clang output.o' and then './a.out' to execute it." << "\n"; 
+    llvm::outs() << "[+] Wrote object file: output.o, and llvm IR file: output.ll" << "\n"; 
+    llvm::outs() << "[*] You can run by 'lli output.ll' directly." << "\n"; 
     // stackoverflow kezhenshi ge haodongxi !!! 
     // stackoverflow is a good thing. 
 }
 
-llvm::GenericValue Generator::run()
-{
-    cout << "[INFO] " << "IR running begin..." << endl;
-    llvm::ExecutionEngine* ee = genExeEngine();
-    vector<llvm::GenericValue> args;
-    llvm::GenericValue res = ee->runFunction(mainFunction, args);
-    cout << "[INFO] " << "IR running finished." << endl;
-    return res;
-}
+// llvm::GenericValue Generator::run()
+// {
+//     cout << "[INFO] " << "IR running begin..." << endl;
+//     llvm::ExecutionEngine* ee = genExeEngine();
+//     vector<llvm::GenericValue> args;
+//     llvm::GenericValue res = ee->runFunction(mainFunction, args);
+//     cout << "[INFO] " << "IR running finished." << endl;
+//     return res;
+// }
 
-llvm::ExecutionEngine* Generator::genExeEngine()
-{
-    std::string errStr;
-    auto RTDyldMM = unique_ptr<llvm::SectionMemoryManager>(new llvm::SectionMemoryManager());
-    llvm::ExecutionEngine* ee = llvm::EngineBuilder(std::move(TheModule))
-//        .setEngineKind(llvm::EngineKind::Interpreter)
-        .setEngineKind(llvm::EngineKind::JIT)
-        .setErrorStr(&errStr)
-        .setVerifyModules(true)
-        .setMCJITMemoryManager(move(RTDyldMM))
-        .setOptLevel(llvm::CodeGenOpt::Default)
-        .create();
-    if (!ee)
-    {
-        throw std::logic_error("[ERROR] Create Engine Error: " + errStr);
-    }
-    ee->addModule(std::move(TheModule));
-    ee->finalizeObject();
-    return ee;
-}
+// llvm::ExecutionEngine* Generator::genExeEngine()
+// {
+//     std::string errStr;
+//     auto RTDyldMM = unique_ptr<llvm::SectionMemoryManager>(new llvm::SectionMemoryManager());
+//     llvm::ExecutionEngine* ee = llvm::EngineBuilder(std::move(TheModule))
+// //        .setEngineKind(llvm::EngineKind::Interpreter)
+//         .setEngineKind(llvm::EngineKind::JIT)
+//         .setErrorStr(&errStr)
+//         .setVerifyModules(true)
+//         .setMCJITMemoryManager(move(RTDyldMM))
+//         .setOptLevel(llvm::CodeGenOpt::Default)
+//         .create();
+//     if (!ee)
+//     {
+//         throw std::logic_error("[ERROR] Create Engine Error: " + errStr);
+//     }
+//     ee->addModule(std::move(TheModule));
+//     ee->finalizeObject();
+//     return ee;
+// }

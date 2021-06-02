@@ -17,13 +17,10 @@ make
 ## Compile SPL programs and Execute 
 
 ```
-spl < test.spl 
+./spl test.spl
 
 // execute IR directly: 
 lli output.ll 
-
-// generate executable object file: 
-clang output.o
 
 // execute the file
 ./a.out
@@ -39,7 +36,8 @@ dot *.dot -T png -o dag.png
 ## AST visualization 
 
 ```
-python ParseTreeVisualizer.py tree.json # tree.json can be omitted, by default
+python ParseTreeVisualizer.py parseTree.json 
+# 'parseTree.json' is set as the default file name
 
 ```
 

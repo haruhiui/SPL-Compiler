@@ -5,7 +5,7 @@ using namespace std;
 
 void LOG_I(const string & msg)
 {
-    // cout << "[INFO] " << msg << endl;
+    cout << "[INFO] " << msg << endl;
 }
 
 void printType(llvm::Value* v)
@@ -484,9 +484,10 @@ llvm::Value *AssignStatement::codeGen(Generator & generator) {
 
 llvm::Value *BinaryExpression::codeGen(Generator & generator) {
     LOG_I("Binary Expression");
-    llvm::Value* lValue = this->lhs->codeGen(generator);
-    llvm::Value* rValue = this->rhs->codeGen(generator);
-    return BinaryOp(lValue, this->op, rValue);
+    llvm::Value* L = this->lhs->codeGen(generator);
+    llvm::Value* R = this->rhs->codeGen(generator);
+    if (!L || !R) return nullptr;
+    return BinaryOp(L, this->op, R);
 }
 
 llvm::Value *ArrayReference::codeGen(Generator & generator) {

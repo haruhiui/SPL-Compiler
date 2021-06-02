@@ -10,13 +10,30 @@ extern Program *root;
 
 int main(int argc, char **argv) 
 {
+    // spl test.spl
+    if (argc < 2) {
+        cout << "Please specify the target file name, such as ***.spl" << endl;
+        return 0;
+    } else if (argc > 2){
+        cout << "It's ok, but only '" << argv[1] << "' will be complied" << endl;
+    }
+    // redirect stdin to file
+    freopen(argv[1],"r",stdin);
+
     yyparse();
-    std::ofstream os("tree.json");
-    os << root->getJson() << std::endl;
+
+    ofstream os("parseTree.json");
+    os << root->getJson() << endl;
 
     Generator generator;
     generator.generate(*root);
-    // generator.run();
     
+    try {
+        system("clang output.o");
+        cout << "[+] Successfully generate a.out from '"<< argv[1] <<"', now you can directly run ./a.out" << endl;
+    } catch (exception e){
+        cout << "[x] Somthing wrong when generating a.out" << endl;
+    }
+        
     return 0;
 }
