@@ -97,7 +97,7 @@ extern "C" int yywrap() {return 1;}
 
 [a-zA-Z_][a-zA-Z0-9_]* { 
 	yylval.sVal = new std::string(yytext, yyleng);
-	return IDENTIFIER; 
+	return ID; 
 } 
 [0-9]+\.[0-9]+ { 
 	double dtmp;
