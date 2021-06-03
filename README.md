@@ -23,8 +23,8 @@ make
 lli output.ll 
 
 // generate executable object file and execute it: 
-clang output.o
-./a.out
+clang output.o 
+./a.out 
 ```
 
 ## DAG visualization 
