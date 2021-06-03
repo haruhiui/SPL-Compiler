@@ -437,7 +437,6 @@ public:
     llvm::Constant* initValue(ConstValue *v = nullptr);
 };
 
-
 class TypeDeclaration : public Statement 
 {
 private:
@@ -451,7 +450,6 @@ public:
     
     virtual string getJson() override;
 };
-
 
 class VarDeclaration : public Statement 
 {
@@ -594,27 +592,7 @@ public:
 
 class BinaryExpression : public Expression 
 {
-
-public:
-    enum BinaryOperator {
-        SPL_PLUS,
-        SPL_MINUS,
-        SPL_MUL,
-        SPL_DIV,
-        SPL_GE,
-        SPL_GT, 
-        SPL_LT,
-        SPL_LE,
-        SPL_EQUAL,
-        SPL_UNEQUAL,
-        SPL_OR,
-        SPL_MOD,
-        SPL_AND,
-        SPL_XOR,
-    };
-
 private:
-    vector<string> opString{"+", "-", "*", "/", ">=", ">", "<", "<=", "==", "!=", "or", "mod", "and", "xor"};
     Expression *lhs;
     Expression *rhs;
     string op;

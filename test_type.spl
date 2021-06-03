@@ -11,7 +11,7 @@ var
     rv : real; 
     bv : boolean; 
     cv : char; 
-    sv : string; 
+
 
 begin 
     iv := 5; 
@@ -19,7 +19,7 @@ begin
     bv := false; 
     cv := 'a'; 
 
-    writeln(); 
+    //writeln(); 
     writeln(ic); 
     writeln(rc); 
     writeln(bc); 

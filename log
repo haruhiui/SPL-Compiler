@@ -1,0 +1,300 @@
+[+] Successfully generate a.out from 'ArrayTest.pas', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'ArrayTest.pas'
+1
+2
+3
+4
+5
+6
+
+
+[+] Successfully generate a.out from 'BranchTest.pas', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'BranchTest.pas'
+a
+b
+c
+
+
+[+] Successfully generate a.out from 'BuildInTypeTest.pas', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'BuildInTypeTest.pas'
+1
+1.500000
+0
+a
+1
+99.900000
+1
+a
+
+
+[+] Successfully generate a.out from 'ComprehensiveTest1.pas', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'ComprehensiveTest1.pas'
+55
+
+
+[+] Successfully generate a.out from 'ComprehensiveTest2.pas', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'ComprehensiveTest2.pas'
+120
+308
+
+
+[+] Successfully generate a.out from 'ComprehensiveTest3.pas', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'ComprehensiveTest3.pas'
+27
+
+
+[+] Successfully generate a.out from 'ComputeTest.pas', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'ComputeTest.pas'
+2
+3.000000
+0
+0.000000
+1
+2.250000
+0
+2
+
+
+[+] Successfully generate a.out from 'GotoTest.pas', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'GotoTest.pas'
+a
+a
+
+
+[+] Successfully generate a.out from 'llvm.pas', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'llvm.pas'
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+101 200
+1
+1
+0
+
+
+[+] Successfully generate a.out from 'LoopTest.pas', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'LoopTest.pas'
+1
+2
+3
+4
+3
+2
+1
+
+
+[+] Successfully generate a.out from 'RecursiveFunctionTest.pas', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'RecursiveFunctionTest.pas'
+1
+1
+2
+3
+5
+8
+13
+21
+34
+55
+
+
+[+] Successfully generate a.out from 'ReferenceParameterTest.pas', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'ReferenceParameterTest.pas'
+0
+1
+
+
+[+] Successfully generate a.out from 'SimpleFunctionTest.pas', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'SimpleFunctionTest.pas'
+3
+
+
+UNKNOWN SYS_TYPE
+Now run 'test1.pas'
+3
+
+
+[+] Successfully generate a.out from 'test2.pas', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'test2.pas'
+55
+
+
+[+] Successfully generate a.out from 'test2.spl', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'test2.spl'
+55
+
+
+[+] Successfully generate a.out from 'test3.pas', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'test3.pas'
+20
+
+
+[+] Successfully generate a.out from 'test4.pas', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'test4.pas'
+120
+308
+
+
+[+] Successfully generate a.out from 'test4.spl', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'test4.spl'
+120
+308
+
+
+[+] Successfully generate a.out from 'test5.pas', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'test5.pas'
+1.100000
+00.010000
+10.040000
+20.090000
+30.160000
+40.250000
+50.360000
+60.490000
+70.640000
+80.810000
+91.000000
+101.210000
+
+
+[+] Successfully generate a.out from 'test6.pas', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'test6.pas'
+27
+
+
+[+] Successfully generate a.out from 'test6.spl', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'test6.spl'
+27
+
+
+[+] Successfully generate a.out from 'test7.pas', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'test7.pas'
+100
+81
+64
+49
+36
+25
+16
+9
+4
+1
+0
+11112
+100
+81
+64
+49
+36
+25
+16
+9
+4
+1
+0
+
+
+[+] Successfully generate a.out from 'test_op.spl', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'test_op.spl'
+29
+23
+78
+8
+2
+
+
+[+] Successfully generate a.out from 'test.pas', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'test.pas'
+1
+2
+3
+4
+5
+6
+
+
+[+] Successfully generate a.out from 'test.spl', now you can directly run ./a.out
+[+] Wrote object file: output.o, and llvm IR file: output.ll
+[*] You can run by 'lli output.ll' directly.
+Now run 'test.spl'
+6
+
+
+Error: syntax error
+Now run 'test_type.spl'
+6
+
+
