@@ -5,7 +5,7 @@ using namespace std;
 
 void LOG_I(const string & msg)
 {
-    cout << "[INFO] " << msg << endl;
+    // cout << "[INFO] " << msg << endl;
 }
 
 void printType(llvm::Value* v)

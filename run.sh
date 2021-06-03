@@ -1,5 +1,5 @@
 make
-for filename in `ls *.spl`
+for filename in `ls *.spl *.pas`
 do
     ./spl $filename
     echo "\nNow run '$filename'"
