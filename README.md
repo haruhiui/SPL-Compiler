@@ -22,7 +22,8 @@ make
 // execute IR directly: 
 lli output.ll 
 
-// execute the file
+// generate executable object file and execute it: 
+clang output.o
 ./a.out
 ```
 
