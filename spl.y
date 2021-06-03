@@ -15,6 +15,7 @@ int yylex(void);
 Program *root;
 %}
 
+// union extend the possible type of yylval
 %union {
 	int iVal;
 	string *sVal;
@@ -85,8 +86,9 @@ Program *root;
 %token	THEN TO TYPE UNTIL VAR 
 %token  WHILE WITH
 
+ // <...> should be specified in %union
 %token<iVal> INTEGER
-%token<sVal> ID SYS_CON SYS_FUNCT SYS_PROC SYS_TYPE READ
+%token<sVal> ID SYS_CON SYS_FUNCT SYS_PROC SYS_TYPE READ STRING
 %token<dVal> REAL
 %token<cVal> CHAR
 
@@ -205,14 +207,21 @@ const_value
 	{ 
 		$$ = new Char($1); 
 	}
+	| STRING
+	{
+		$$ = new String($1);
+	}
 	| SYS_CON 
 	{
-		if (*$1 == "true")
+		if (*$1 == "true") {
 			$$ = new Boolean(true);
-		else if(*$1 == "false")
+		} else if(*$1 == "false") {
 			$$ = new Boolean(false);
-		else
-			$$ = new Integer(0x7FFFFFFF);
+		} else {
+			// "maxint"
+			$$ = new Integer(0x7FFFFFFF);	
+		}
+			
 	}
 	;
 
@@ -221,7 +230,7 @@ type_part
 	{ 
 		$$ = $2; 
 	}
-	| 
+	| /* empty */
 	{ 
 		$$ = new TypeDeclList(); 
 	}
@@ -265,16 +274,19 @@ type_decl
 simple_type_decl 
 	: SYS_TYPE
 	{
-		if(*$1 == "integer")
+		if(*$1 == "integer") {
 			$$ = new AstType(SPL_INTEGER);
-		else if(*$1 == "boolean")
+		} else if(*$1 == "boolean") {
 			$$ = new AstType(SPL_BOOLEAN);
-		else if(*$1 == "real")
+		} else if(*$1 == "real") {
 			$$ = new AstType(SPL_REAL);
-		else if(*$1 == "char")
+		} else if(*$1 == "char") {
 			$$ = new AstType(SPL_CHAR);
-		else
-			cout << "UNKNOWN SYS_TYPE" << endl;
+		} else if(*$1 == "string") {
+			$$ = new AstType(SPL_STRING);
+		} else {
+			cout << "wrong SYS_TYPE" << endl;
+		}
 	}
 	| name
 	{ 
@@ -606,7 +618,8 @@ expression_list
 	}
 	| expression
 	{ 
-		$$ = new ExpressionList(); $$->push_back($1); 
+		$$ = new ExpressionList(); 
+		$$->push_back($1); 
 	}
 	;
 
@@ -749,7 +762,7 @@ else_clause
 	{ 
 		$$ = $2; 
 	}
-	|
+	| /* empty */
 	{ 
 		$$ = nullptr; 
 	}

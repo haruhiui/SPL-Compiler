@@ -13,6 +13,11 @@ extern "C" int yywrap() {return 1;}
 	yylval.cVal = yytext[1];
 	return CHAR; 
 }
+ /* TODO: not support "asd\"asd"*/
+\".*\" {
+	yylval.sVal = new std::string(yytext+1, yyleng-2);
+	return STRING;
+}
 	/* operator and delimeter*/
 "("				{ return LP; }
 ")"				{ return RP; }

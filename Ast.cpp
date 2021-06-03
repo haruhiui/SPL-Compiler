@@ -51,6 +51,7 @@ llvm::Type* toLLVMPtrType(const BuildInType & type)
         case SPL_REAL: return llvm::Type::getDoublePtrTy(*TheContext);
         case SPL_CHAR: return llvm::Type::getInt8PtrTy(*TheContext);
         case SPL_BOOLEAN: return llvm::Type::getInt1PtrTy(*TheContext);
+        case SPL_STRING: return llvm::Type::getInt8PtrTy(*TheContext);
         default: throw logic_error("Not supported pointer type.");
     }
 }
@@ -77,6 +78,7 @@ llvm::Type* AstType::toLLVMType()
                 case SPL_REAL: return TheBuilder.getDoubleTy();
                 case SPL_CHAR: return TheBuilder.getInt8Ty();
                 case SPL_BOOLEAN: return TheBuilder.getInt1Ty();
+                case SPL_STRING: return TheBuilder.getInt8Ty();
             }
             break;
         case SPL_ENUM:
@@ -119,6 +121,7 @@ llvm::Constant* AstType::initValue(ConstValue *v)
                     case SPL_REAL: return llvm::ConstantFP::get(TheBuilder.getDoubleTy(), v->getValue().r);
                     case SPL_CHAR: return TheBuilder.getInt8(v->getValue().c);
                     case SPL_BOOLEAN: return TheBuilder.getInt1(v->getValue().b);
+                    case SPL_STRING: return TheBuilder.CreateGlobalStringPtr(llvm::StringRef((const char*)(v->getValue().s)));
                 }
                 break;
             case SPL_ENUM:
@@ -155,6 +158,7 @@ llvm::Constant* AstType::initValue(ConstValue *v)
                     case SPL_REAL: return llvm::ConstantFP::get(TheBuilder.getDoubleTy(), 0.0);
                     case SPL_CHAR: return TheBuilder.getInt8(0);
                     case SPL_BOOLEAN: return TheBuilder.getInt1(0);
+                    case SPL_STRING: return TheBuilder.getInt8(0);
                 }
                 break;
             case SPL_ENUM:
@@ -165,39 +169,37 @@ llvm::Constant* AstType::initValue(ConstValue *v)
     }
 }
 
-llvm::Value *BinaryOp(llvm::Value *lValue, string op, llvm::Value *rValue)
+llvm::Value *BinaryOp(llvm::Value *L, string op, llvm::Value *R)
 {
-//        printType(lValue);
-//        printType(rValue);
-    bool flag = lValue->getType()->isDoubleTy() || rValue->getType()->isDoubleTy();
+    bool flag = L->getType()->isDoubleTy() || R->getType()->isDoubleTy();
     if (op == "+") {
-        return flag ? TheBuilder.CreateFAdd(lValue, rValue, "addtmpf") : TheBuilder.CreateAdd(lValue, rValue, "addtmpi");
+        return flag ? TheBuilder.CreateFAdd(L, R, "addtmpf") : TheBuilder.CreateAdd(L, R, "addtmpi");
     } else if (op == "-") {
-        return flag ? TheBuilder.CreateFSub(lValue, rValue, "subtmpf") : TheBuilder.CreateSub(lValue, rValue, "subtmpi");
+        return flag ? TheBuilder.CreateFSub(L, R, "subtmpf") : TheBuilder.CreateSub(L, R, "subtmpi");
     } else if (op == "*") {
-        return flag ? TheBuilder.CreateFMul(lValue, rValue, "multmpf") : TheBuilder.CreateMul(lValue, rValue, "multmpi");
+        return flag ? TheBuilder.CreateFMul(L, R, "multmpf") : TheBuilder.CreateMul(L, R, "multmpi");
     } else if (op == "/") {
-        return TheBuilder.CreateSDiv(lValue, rValue, "tmpDiv");
+        return TheBuilder.CreateSDiv(L, R, "tmpDiv");
     } else if (op == ">=") {
-        return TheBuilder.CreateICmpSGE(lValue, rValue, "tmpSGE");
+        return TheBuilder.CreateICmpSGE(L, R, "tmpSGE");
     } else if (op == ">") {
-        return TheBuilder.CreateICmpSGT(lValue, rValue, "tmpSGT");
+        return TheBuilder.CreateICmpSGT(L, R, "tmpSGT");
     } else if (op == "<") {
-        return TheBuilder.CreateICmpSLT(lValue, rValue, "tmpSLT");
+        return TheBuilder.CreateICmpSLT(L, R, "tmpSLT");
     } else if (op == "<=") {
-        return TheBuilder.CreateICmpSLE(lValue, rValue, "tmpSLE");
+        return TheBuilder.CreateICmpSLE(L, R, "tmpSLE");
     } else if (op == "=") {
-        return TheBuilder.CreateICmpEQ(lValue, rValue, "tmpEQ");
+        return TheBuilder.CreateICmpEQ(L, R, "tmpEQ");
     } else if (op == "<>") {
-        return TheBuilder.CreateICmpNE(lValue, rValue, "tmpNE");
+        return TheBuilder.CreateICmpNE(L, R, "tmpNE");
     } else if (op == "or") {
-        return TheBuilder.CreateOr(lValue, rValue, "tmpOR");
+        return TheBuilder.CreateOr(L, R, "tmpOR");
     } else if (op == "mod") {
-        return TheBuilder.CreateSRem(lValue, rValue, "tmpSREM");
+        return TheBuilder.CreateSRem(L, R, "tmpSREM");
     } else if (op == "and") {
-        return TheBuilder.CreateAnd(lValue, rValue, "tmpAND");
+        return TheBuilder.CreateAnd(L, R, "tmpAND");
     } else if (op == "xor") {
-        return TheBuilder.CreateXor(lValue, rValue, "tmpXOR");
+        return TheBuilder.CreateXor(L, R, "tmpXOR");
     } else {
         return nullptr;
     }
@@ -217,6 +219,12 @@ llvm::Value *Integer::codeGen(Generator & generator) {
 llvm::Value *Char::codeGen(Generator & generator) {
     LOG_I("Char");
     return TheBuilder.getInt8(this->value);
+}
+
+// Found on Stackoverflow
+llvm::Value *String::codeGen(Generator & generator) {
+    LOG_I("String");
+    return TheBuilder.CreateGlobalStringPtr(llvm::StringRef((const char*)this->value));
 }
 
 llvm::Value *Real::codeGen(Generator & generator) {
@@ -477,7 +485,7 @@ llvm::Value *AssignStatement::codeGen(Generator & generator) {
     {
         case ID_ASSIGN: res = TheBuilder.CreateStore(this->rhs->codeGen(generator), generator.findValue(this->lhs->getName())); break;
         case ARRAY_ASSIGN: res = TheBuilder.CreateStore(this->rhs->codeGen(generator), (new ArrayReference(this->lhs, this->sub))->getReference(generator)); break;
-        case RECORD_ASSIGN: res = nullptr; break;
+        case RECORD_ASSIGN: res = nullptr; 
     }
     this->backward(generator);
     return res;
@@ -835,23 +843,18 @@ llvm::Value *CaseStatement::codeGen(Generator & generator) {
     llvm::Function *TheFunction = generator.getCurFunction();
     llvm::BasicBlock *afterBB = llvm::BasicBlock::Create(*TheContext, "afterCase", TheFunction);
     vector<llvm::BasicBlock*> switchBBs, caseBBs;
-    for (int i = 1; i <= this->caseExprList->size(); i++)
-    {
+    for (int i = 1; i <= this->caseExprList->size(); i++){
         switchBBs.push_back(llvm::BasicBlock::Create(*TheContext, "switch", TheFunction));
         caseBBs.push_back(llvm::BasicBlock::Create(*TheContext, "case", TheFunction));
     }
     TheBuilder.CreateBr(switchBBs[0]);
-    for (int i = 0; i < this->caseExprList->size(); i++)
-    {
+    for (int i = 0; i < this->caseExprList->size(); i++){
         //Switch
         TheBuilder.SetInsertPoint(switchBBs[i]);
         condValue = BinaryOp(cmpValue, "=", (*caseExprList)[i]->value->codeGen(generator));
-        if (i < this->caseExprList->size() - 1)
-        {
+        if (i < this->caseExprList->size() - 1){
             TheBuilder.CreateCondBr(condValue, caseBBs[i], switchBBs[i + 1]);
-        }
-        else
-        {
+        } else {
             TheBuilder.CreateCondBr(condValue, caseBBs[i], afterBB);
         }
         
@@ -872,17 +875,13 @@ llvm::Value *CaseExpression::codeGen(Generator & generator) {
     return this->stmt->codeGen(generator);
 }
 
-void Statement::forward(Generator & generator)
-{
+void Statement::forward(Generator & generator) {
     llvm::Function *TheFunction = generator.getCurFunction();
-    if (this->label >= 0)
-    {
-        if (generator.labelBlock[this->label] == nullptr)
-        {
+    if (this->label >= 0) {
+        if (generator.labelBlock[this->label] == nullptr) {
             generator.labelBlock[this->label] = llvm::BasicBlock::Create(*TheContext, "Label_" + to_string(label), TheFunction);
         }
-        if (this->afterBB == nullptr)
-        {
+        if (this->afterBB == nullptr) {
             this->afterBB = llvm::BasicBlock::Create(*TheContext, "afterLabel_" + to_string(this->label), TheFunction);
         }
         TheBuilder.CreateBr(generator.labelBlock[this->label]);
@@ -904,8 +903,7 @@ llvm::Value *GotoStatement::codeGen(Generator & generator) {
     LOG_I("Goto Statement");
     this->forward(generator);
     llvm::Value *res = nullptr;
-    if (generator.labelBlock[this->toLabel] == nullptr)
-    {
+    if (generator.labelBlock[this->toLabel] == nullptr) {
         generator.labelBlock[this->toLabel] = llvm::BasicBlock::Create(*TheContext, "Label_" + to_string(this->toLabel), generator.getCurFunction());
     }
     res = TheBuilder.CreateBr(generator.labelBlock[this->toLabel]);
@@ -922,19 +920,18 @@ llvm::Value *CompoundStatement::codeGen(Generator & generator) {
     LOG_I("CompoundStatement");
     this->forward(generator);
     llvm::Value *lastValue = nullptr;
-    for (auto & stmt : *(this->stmtList))
-    {
+    for (auto & stmt : *(this->stmtList)) {
         lastValue = stmt->codeGen(generator);
     }
     this->backward(generator);
     return lastValue;
 }
 
-string getJsonString(string name) {
+string jsonfy(string name) {
     return "{ \"name\" : \"" + name + "\" }";
 }
 
-string getJsonString(string name, vector<string> children) {
+string jsonfy(string name, vector<string> children) {
     string result = "{ \"name\" : \"" + name + "\", \"children\" : [ ";
     int i = 0;
     for(auto &child : children) {
@@ -947,11 +944,11 @@ string getJsonString(string name, vector<string> children) {
     return result + " ] }";
 }
 
-string getJsonString(string name, string value) {
-    return getJsonString(name, vector<string>{value});
+string jsonfy(string name, string value) {
+    return jsonfy(name, vector<string>{value});
 }
 
-string getJsonString(string name, string value, vector<string> children) {
+string jsonfy(string name, string value, vector<string> children) {
     string result = "{ \"name\" : \"" + name + "\", \"value\" : \"" + value + "\", \"children\" : [ ";
     int i = 0;
     for(auto &child : children) {
@@ -965,34 +962,37 @@ string getJsonString(string name, string value, vector<string> children) {
 }
 
 string Program::getJson() {
-    return getJsonString("program", *programID, vector<string>{routine->getJson()});
+    return jsonfy("program", *programID, vector<string>{routine->getJson()});
 }
 
 string Identifier::getJson() {
-    return getJsonString("Identifier", getJsonString(*name));
+    return jsonfy("Identifier", jsonfy(*name));
 }
 
 string Integer::getJson() {
-    return getJsonString("Integer", getJsonString(to_string(value)));
+    return jsonfy("Integer", jsonfy(to_string(value)));
 }
 
 string Real::getJson() {
-    return getJsonString("Real", getJsonString(to_string(value)));
+    return jsonfy("Real", jsonfy(to_string(value)));
 }
 
 string Char::getJson() {
-    return getJsonString("Char", getJsonString(string(1, value)));
+    return jsonfy("Char", jsonfy(string(1, value)));
 }
 
+string String::getJson() {
+    return jsonfy("String", jsonfy(*value));
+}
 string Boolean::getJson() {
-    return getJsonString("Boolean", getJsonString((value ? "true" : "false")));
+    return jsonfy("Boolean", jsonfy((value ? "true" : "false")));
 }
 
 string ConstDeclaration::getJson() {
     vector<string> children;
     children.push_back(name->getJson());
     children.push_back(value->getJson());
-    return getJsonString("ConstDeclaration", children);
+    return jsonfy("ConstDeclaration", children);
 }
 
 string EnumType::getJson() {
@@ -1000,28 +1000,28 @@ string EnumType::getJson() {
     for(auto &name : *enumList) {
         children.push_back(name->getJson());
     }
-    return getJsonString("EnumType", children);
+    return jsonfy("EnumType", children);
 }
 
 string AstArrayType::getJson() {
     vector<string> children;
-    children.push_back(getJsonString("range", range->getJson()));
-    children.push_back(getJsonString("type", type->getJson()));
-    return getJsonString("AstArrayType", children);
+    children.push_back(jsonfy("range", range->getJson()));
+    children.push_back(jsonfy("type", type->getJson()));
+    return jsonfy("AstArrayType", children);
 }
 
 string ConstRangeType::getJson() {
     vector<string> children;
-    children.push_back(getJsonString("lowBound", lowBound->getJson()));
-    children.push_back(getJsonString("upBound", upBound->getJson()));
-    return getJsonString("ConstRangeType", children);
+    children.push_back(jsonfy("lowBound", lowBound->getJson()));
+    children.push_back(jsonfy("upBound", upBound->getJson()));
+    return jsonfy("ConstRangeType", children);
 }
 
 string EnumRangeType::getJson() {
     vector<string> children;
-    children.push_back(getJsonString("lowBound", lowBound->getJson()));
-    children.push_back(getJsonString("upBound", upBound->getJson()));
-    return getJsonString("EnumRangeType", children);
+    children.push_back(jsonfy("lowBound", lowBound->getJson()));
+    children.push_back(jsonfy("upBound", upBound->getJson()));
+    return jsonfy("EnumRangeType", children);
 }
 
 string FieldDeclaration::getJson() {
@@ -1030,9 +1030,9 @@ string FieldDeclaration::getJson() {
     for(auto &name : *nameList) {
         nameListJson.push_back(name->getJson());
     }
-    children.push_back(getJsonString("nameList", nameListJson));
-    children.push_back(getJsonString("type", type->getJson()));
-    return getJsonString("FieldDeclaration", children);
+    children.push_back(jsonfy("nameList", nameListJson));
+    children.push_back(jsonfy("type", type->getJson()));
+    return jsonfy("FieldDeclaration", children);
 }
 
 string RecordType::getJson() {
@@ -1041,7 +1041,7 @@ string RecordType::getJson() {
         children.push_back(field->getJson());
     }
 
-    return getJsonString("RecordType", children);
+    return jsonfy("RecordType", children);
 }
 
 string AstType::getJson() {
@@ -1066,26 +1066,29 @@ string AstType::getJson() {
         switch (buildInType)
         {
         case SPL_INTEGER:
-            return getJsonString("BuildInType", getJsonString("Integer"));
+            return jsonfy("SYS_TYPE", jsonfy("Integer"));
             break;
         case SPL_REAL:
-            return getJsonString("BuildInType", getJsonString("Real"));
+            return jsonfy("SYS_TYPE", jsonfy("Real"));
             break;
         case SPL_CHAR:
-            return getJsonString("BuildInType", getJsonString("Char"));
+            return jsonfy("SYS_TYPE", jsonfy("Char"));
             break;
         case SPL_BOOLEAN:
-            return getJsonString("BuildInType", getJsonString("Boolean"));
+            return jsonfy("SYS_TYPE", jsonfy("Boolean"));
+            break;
+        case SPL_STRING:
+            return jsonfy("SYS_TYPE", jsonfy("String"));
             break;
         default:
             break;
         }
         break;
     case SPL_USER_DEFINE:
-        return getJsonString("UserDefineType", getJsonString(userDefineType->getName()));
+        return jsonfy("UserDefineType", jsonfy(userDefineType->getName()));
         break;
     default:
-        return getJsonString("ErrorType");
+        return jsonfy("ErrorType");
         break;
     }
 }
@@ -1094,7 +1097,7 @@ string TypeDeclaration::getJson() {
     vector<string> children;
     children.push_back(name->getJson());
     children.push_back(type->getJson());
-    return getJsonString("TypeDeclaration", children);
+    return jsonfy("TypeDeclaration", children);
 }
 
 string VarDeclaration::getJson() {
@@ -1103,9 +1106,9 @@ string VarDeclaration::getJson() {
     for(auto &name : *nameList) {
         nameListJson.push_back(name->getJson());
     }
-    children.push_back(getJsonString("Type", type->getJson()));
-    children.push_back(getJsonString("NameList", nameListJson));
-    return getJsonString("VarDeclaration", children);
+    children.push_back(jsonfy("Type", type->getJson()));
+    children.push_back(jsonfy("NameList", nameListJson));
+    return jsonfy("VarDeclaration", children);
 }
 
 string FuncDeclaration::getJson() {
@@ -1114,11 +1117,11 @@ string FuncDeclaration::getJson() {
     vector<string> paraListJson;
     for(auto &para : *paraList)
         paraListJson.push_back(para->getJson());
-    children.push_back(getJsonString("ParaList", paraListJson));
+    children.push_back(jsonfy("ParaList", paraListJson));
     children.push_back(returnType->getJson());
     children.push_back(subRoutine->getJson());
 
-    return getJsonString("FuncDeclaration", children);
+    return jsonfy("FuncDeclaration", children);
 }
 
 string Parameter::getJson() {
@@ -1127,10 +1130,10 @@ string Parameter::getJson() {
     for(auto &name : *nameList) {
         nameListJson.push_back(name->getJson());
     }
-    children.push_back(getJsonString("Type", type->getJson()));
-    children.push_back(getJsonString("NameList", nameListJson));
-    children.push_back(getJsonString("isVar", getJsonString((isVar ? "true" : "false" ))));
-    return getJsonString("Parameter", children);
+    children.push_back(jsonfy("Type", type->getJson()));
+    children.push_back(jsonfy("NameList", nameListJson));
+    children.push_back(jsonfy("isVar", jsonfy((isVar ? "true" : "false" ))));
+    return jsonfy("Parameter", children);
 }
 
 string Routine::getJson() {
@@ -1144,12 +1147,12 @@ string Routine::getJson() {
         typeJson.push_back(typeDecl->getJson());
     for(auto routineDecl : *routineList)
         routineJson.push_back(routineDecl->getJson());
-    children.push_back(getJsonString("ConstDeclList", constJson));
-    children.push_back(getJsonString("VarDeclList", varJson)); 
-    children.push_back(getJsonString("TypeDeclList", typeJson));
-    children.push_back(getJsonString("RoutineDeclList", routineJson));
+    children.push_back(jsonfy("ConstDeclList", constJson));
+    children.push_back(jsonfy("VarDeclList", varJson)); 
+    children.push_back(jsonfy("TypeDeclList", typeJson));
+    children.push_back(jsonfy("RoutineDeclList", routineJson));
     children.push_back(routineBody->getJson());
-    return getJsonString("Routine", children);
+    return jsonfy("Routine", children);
 }
 
 string AssignStatement::getJson() {
@@ -1174,16 +1177,16 @@ string AssignStatement::getJson() {
         break;
     }    
 
-    return getJsonString("AssignStatement", children);
+    return jsonfy("AssignStatement", children);
 }
 
 string BinaryExpression::getJson() {
     vector<string> children;
     children.push_back(lhs->getJson());
-    children.push_back(getJsonString(this->op));
+    children.push_back(jsonfy(this->op));
     children.push_back(rhs->getJson());
 
-    return getJsonString("BinaryExpression", children);
+    return jsonfy("BinaryExpression", children);
 }
 
 string ArrayReference::getJson() {
@@ -1191,7 +1194,7 @@ string ArrayReference::getJson() {
     children.push_back(array->getJson());
     children.push_back(index->getJson());
 
-    return getJsonString("ArrayReference", children);
+    return jsonfy("ArrayReference", children);
 }
 
 string RecordReference::getJson() {
@@ -1199,7 +1202,7 @@ string RecordReference::getJson() {
     children.push_back(record->getJson());
     children.push_back(field->getJson());
 
-    return getJsonString("RecordReference", children);
+    return jsonfy("RecordReference", children);
 }
 
 string FunctionCall::getJson() {
@@ -1209,8 +1212,8 @@ string FunctionCall::getJson() {
     for(auto &arg : *args) {
         argsJson.push_back(arg->getJson());
     }
-    children.push_back(getJsonString("ArgList", argsJson));
-    return getJsonString("FunctionCall", children);
+    children.push_back(jsonfy("ArgList", argsJson));
+    return jsonfy("FunctionCall", children);
 }
 
 string ProcedureCall::getJson() {
@@ -1220,40 +1223,40 @@ string ProcedureCall::getJson() {
     for(auto &arg : *args) {
         argsJson.push_back(arg->getJson());
     }
-    children.push_back(getJsonString("ArgList", argsJson));
-    return getJsonString("ProcedureCall", children);
+    children.push_back(jsonfy("ArgList", argsJson));
+    return jsonfy("ProcedureCall", children);
 }
 
 string SysFunctionCall::getJson() {
     vector<string> children;
-    children.push_back(getJsonString("SysFunction", getJsonString(*name)));
+    children.push_back(jsonfy("SysFunction", jsonfy(*name)));
     vector<string> argsJson;
     for(auto &arg : *args) {
         argsJson.push_back(arg->getJson());
     }
-    children.push_back(getJsonString("ArgList", argsJson));
-    return getJsonString("SysFunctionCall", children);
+    children.push_back(jsonfy("ArgList", argsJson));
+    return jsonfy("SysFunctionCall", children);
 }
 
 string SysProcedureCall::getJson() {
     vector<string> children;
-    children.push_back(getJsonString("SysProcedure", getJsonString(*name)));
+    children.push_back(jsonfy("SysProcedure", jsonfy(*name)));
     vector<string> argsJson;
     for(auto &arg : *args) {
         argsJson.push_back(arg->getJson());
     }
-    children.push_back(getJsonString("ArgList", argsJson));
-    return getJsonString("SysProcedureCall", children);
+    children.push_back(jsonfy("ArgList", argsJson));
+    return jsonfy("SysProcedureCall", children);
 }
 
 string IfStatement::getJson() {
     vector<string> children;
     children.push_back(condition->getJson());
     children.push_back(thenStatement->getJson());
-    if(elseStatement != nullptr)
+    if(elseStatement)
         children.push_back(elseStatement->getJson());
 
-    return getJsonString("IfStatement", children);
+    return jsonfy("IfStatement", children);
 }
 
 string RepeatStatement::getJson() {
@@ -1262,9 +1265,9 @@ string RepeatStatement::getJson() {
     vector<string> repeatStmtJson;
     for(auto &stmt : *repeatStatement)
         repeatStmtJson.push_back(stmt->getJson());
-    children.push_back(getJsonString("RepeatStatement", repeatStmtJson));
+    children.push_back(jsonfy("RepeatStatement", repeatStmtJson));
 
-    return getJsonString("RepeatStatement", children);
+    return jsonfy("RepeatStatement", children);
 }
 
 string WhileStatement::getJson() {
@@ -1272,18 +1275,18 @@ string WhileStatement::getJson() {
     children.push_back(condition->getJson());
     children.push_back(stmt->getJson());
 
-    return getJsonString("WhileStatement", children);
+    return jsonfy("WhileStatement", children);
 }
 
 string ForStatement::getJson() {
     vector<string> children;
     children.push_back(var->getJson());
     children.push_back(value->getJson());
-    children.push_back(getJsonString("isAdd", getJsonString((isAdd ? "true" : "false"))));
+    children.push_back(jsonfy("isAdd", jsonfy((isAdd ? "true" : "false"))));
     children.push_back(step->getJson());
     children.push_back(stmt->getJson());
 
-    return getJsonString("ForStatement", children);
+    return jsonfy("ForStatement", children);
 }  
 
 string CaseStatement::getJson() {
@@ -1293,9 +1296,9 @@ string CaseStatement::getJson() {
     for(auto &caseExpr : *caseExprList) {
         caseExprJsonList.push_back(caseExpr->getJson());
     }
-    children.push_back(getJsonString("CaseExprList", caseExprJsonList));
+    children.push_back(jsonfy("CaseExprList", caseExprJsonList));
 
-    return getJsonString("CaseStatement", children);
+    return jsonfy("CaseStatement", children);
 }    
 
 string CaseExpression::getJson() {
@@ -1303,11 +1306,11 @@ string CaseExpression::getJson() {
     children.push_back(value->getJson());
     children.push_back(stmt->getJson());
 
-    return getJsonString("CaseExpression", children);
+    return jsonfy("CaseExpression", children);
 }
 
 string GotoStatement::getJson() {
-    return getJsonString("GotoStatement", getJsonString(to_string(toLabel)));
+    return jsonfy("GotoStatement", jsonfy(to_string(toLabel)));
 }    
 
 string CompoundStatement::getJson() {
@@ -1315,5 +1318,5 @@ string CompoundStatement::getJson() {
     for(auto &stmt : *stmtList) {
         stmtJsonList.push_back(stmt->getJson());
     }
-    return getJsonString("CompoundStatement", stmtJsonList);
+    return jsonfy("CompoundStatement", stmtJsonList);
 }

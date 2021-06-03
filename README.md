@@ -49,7 +49,8 @@ python ParseTreeVisualizer.py parseTree.json
 
 ## TODO
 
-* Allow function be defined in a function
+* Allow function be defined in a function.
+* Writeln() should support newline.
 
 ## Time Line
 
@@ -62,3 +63,5 @@ python ParseTreeVisualizer.py parseTree.json
     * solved: procedure must not return anything 
 * 5.30
     * add: able to generate parse tree picture
+* 6.2
+    * add: string type now available when draw pic, but something wrong with write.

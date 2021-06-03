@@ -5,29 +5,31 @@ const
     rc = 1.234; 
     bc = false; 
     cc = 'c'; 
+    sc = "asd";
 
 var 
     iv : integer; 
     rv : real; 
     bv : boolean; 
     cv : char; 
-
+    sv : string;
 
 begin 
     iv := 5; 
     rv := 3.124; 
     bv := false; 
     cv := 'a'; 
-
-    //writeln(); 
-    writeln(ic); 
-    writeln(rc); 
-    writeln(bc); 
-    writeln(cc); 
-    writeln(iv); 
-    writeln(rv); 
-    writeln(bv); 
-    writeln(cv); 
+    sv := "asd";
+    writeln(sc); 
+    writeln(svs);
+    //writeln(ic); 
+   // writeln(rc); 
+   // writeln(bc); 
+   // writeln(cc); 
+   // writeln(iv); 
+   // writeln(rv); 
+   // writeln(bv); 
+   // writeln(cv); 
 
 end 
 . 

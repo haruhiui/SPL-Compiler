@@ -19,6 +19,7 @@ class Integer;
 class Real;
 class Char;
 class Boolean;
+class Stirng;
 class ConstValue;
 class Identifier;
 class ConstDeclaration;
@@ -71,7 +72,8 @@ enum BuildInType
     SPL_INTEGER,
     SPL_REAL,
     SPL_CHAR,
-    SPL_BOOLEAN
+    SPL_BOOLEAN,
+    SPL_STRING
 };
 
 // AST 节点
@@ -101,14 +103,9 @@ private:
 public:
     llvm::BasicBlock *afterBB;
 
-    // 用于Goto语句设置标号
+    // set label for goto
     void setLabel(int label) {
         this->label = label;
-    }
-
-    // 用于得到Goto语句需要的标号，若不存在则返回-1
-    int getLable() const {
-        return label;
     }
 
     void forward(Generator & generator);
@@ -143,6 +140,7 @@ public:
         double r;
         bool b;
         char c;
+        string* s;
     };
     
     virtual BuildInType getType() = 0;
@@ -231,6 +229,34 @@ public:
     
     virtual ConstValue *operator-() override {
         return new Char(-value);
+    }
+
+    virtual llvm::Value *codeGen(Generator & generator) override;
+
+    virtual string getJson() override;
+};
+
+class String : public ConstValue
+{
+private:
+    string* value;
+
+public:
+    String(string* value) : value(value) { }
+
+    virtual BuildInType getType() override {
+        return SPL_STRING;
+    }
+
+    virtual ConstValue::Value getValue() override {
+        Value v;
+        v.s = value;
+        return v;
+    }
+    
+    virtual ConstValue *operator-() override {
+        // return new Char(-value);
+        return nullptr;
     }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
