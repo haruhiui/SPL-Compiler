@@ -66,3 +66,5 @@ python ParseTreeVisualizer.py parseTree.json
     * add: able to generate parse tree picture
 * 6.2
     * add: string type now available when draw pic, but something wrong with write.
+* 6.2 
+    * add: able to write string variable and string constant 

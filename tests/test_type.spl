@@ -18,8 +18,9 @@ begin
     rv := 3.124; 
     bv := false; 
     cv := 'a'; 
+    sv := "asdf"; 
 
-    writeln(); 
+    // writeln(); // this is not allowed because we can not use printf(); 
     writeln(ic); 
     writeln(rc); 
     writeln(bc); 
@@ -28,6 +29,8 @@ begin
     writeln(rv); 
     writeln(bv); 
     writeln(cv); 
+    writeln(sv);
+    writeln("qwer"); 
 
 end 
 . 

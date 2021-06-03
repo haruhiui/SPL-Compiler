@@ -76,7 +76,6 @@ void Generator::generate(Program& parseTreeRoot)
 
     llvm::outs() << "[+] Wrote object file: output.o, and llvm IR file: output.ll" << "\n"; 
     llvm::outs() << "[*] You can run by 'lli output.ll' directly." << "\n"; 
-    // stackoverflow kezhenshi ge haodongxi !!! 
     // stackoverflow is a good thing. 
 }
 

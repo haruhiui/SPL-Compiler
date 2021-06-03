@@ -78,7 +78,9 @@ llvm::Type* AstType::toLLVMType()
                 case SPL_REAL: return TheBuilder.getDoubleTy();
                 case SPL_CHAR: return TheBuilder.getInt8Ty();
                 case SPL_BOOLEAN: return TheBuilder.getInt1Ty();
-                case SPL_STRING: return TheBuilder.getInt8Ty();
+                // I want to beat cby up 
+                // case SPL_STRING: return TheBuilder.getInt8Ty();
+                case SPL_STRING: return TheBuilder.getInt8PtrTy(); 
             }
             break;
         case SPL_ENUM:
@@ -221,10 +223,10 @@ llvm::Value *Char::codeGen(Generator & generator) {
     return TheBuilder.getInt8(this->value);
 }
 
-// Found on Stackoverflow
 llvm::Value *String::codeGen(Generator & generator) {
     LOG_I("String");
-    return TheBuilder.CreateGlobalStringPtr(llvm::StringRef((const char*)this->value));
+    // Found on Stackoverflow
+    return TheBuilder.CreateGlobalStringPtr(llvm::StringRef(this->value->c_str()));
 }
 
 llvm::Value *Real::codeGen(Generator & generator) {
@@ -273,7 +275,7 @@ llvm::Value *AstType::codeGen(Generator & generator) {
 
 llvm::Value *EnumType::codeGen(Generator & generator) {
     LOG_I("Enum Type");
-    //TODO
+    // TODO
     return nullptr;
 }
 
@@ -611,7 +613,11 @@ llvm::Value *SysProcedureCall::SysProcWrite(Generator & generator, bool isLineBr
         }
         else if (argValue->getType() == TheBuilder.getInt8Ty())
         {
-            formatStr += "%c";
+            formatStr += "%c"; 
+        }
+        else if (argValue->getType() == TheBuilder.getInt8PtrTy()) 
+        { 
+            formatStr += "%s"; 
         }
         else if (argValue->getType() == TheBuilder.getInt1Ty())
         {
@@ -623,10 +629,11 @@ llvm::Value *SysProcedureCall::SysProcWrite(Generator & generator, bool isLineBr
         }
         else
         {
-            throw logic_error("[ERROR] Invalid type to write.");
+            // throw logic_error("[ERROR] Invalid type to write.");
         }
         params.push_back(argValue);
     }
+
     if (isLineBreak)
     {
         formatStr += "\n";
@@ -656,7 +663,7 @@ llvm::Value *SysProcedureCall::SysProcRead(Generator & generator)
     }
     else if (argValue->getType() == TheBuilder.getInt8Ty())
     {
-        formatStr += "%c";
+        formatStr += "%c"; 
     }
     else if (argValue->getType() == TheBuilder.getInt1Ty())
     {

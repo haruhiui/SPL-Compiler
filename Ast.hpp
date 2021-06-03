@@ -142,13 +142,16 @@ public:
         char c;
         string* s;
     };
-    
-    virtual BuildInType getType() = 0;
+    BuildInType valueType; 
     
     virtual ConstValue::Value getValue() = 0;
     
     virtual ConstValue *operator-() = 0;
 
+    BuildInType getType() {
+        return valueType; 
+    }
+    
     virtual bool isValidConstRangeType() {
         BuildInType t = getType();
         return t == SPL_INTEGER || t == SPL_CHAR;
@@ -161,10 +164,8 @@ private:
     int value;
 
 public:
-    Integer(int value) : value(value) { }
-
-    virtual BuildInType getType() override {
-        return SPL_INTEGER;
+    Integer(int value) : value(value) {
+        this->valueType = SPL_INTEGER; 
     }
 
     virtual ConstValue::Value getValue() override {
@@ -188,10 +189,8 @@ private:
     double value;
 
 public:
-    Real(double value) : value(value) { }
-
-    virtual BuildInType getType() override {
-        return SPL_REAL;
+    Real(double value) : value(value) {
+        this->valueType = SPL_REAL; 
     }
 
     virtual ConstValue::Value getValue() override {
@@ -215,10 +214,8 @@ private:
     char value;
 
 public:
-    Char(char value) : value(value) { }
-
-    virtual BuildInType getType() override {
-        return SPL_CHAR;
+    Char(char value) : value(value) { 
+        this->valueType = SPL_CHAR; 
     }
 
     virtual ConstValue::Value getValue() override {
@@ -242,10 +239,8 @@ private:
     string* value;
 
 public:
-    String(string* value) : value(value) { }
-
-    virtual BuildInType getType() override {
-        return SPL_STRING;
+    String(string* value) : value(value) { 
+        this->valueType = SPL_STRING; 
     }
 
     virtual ConstValue::Value getValue() override {
@@ -270,10 +265,8 @@ private:
     bool value;
 
 public:
-    Boolean(bool value) : value(value) { }
-
-    virtual BuildInType getType() override {
-        return SPL_BOOLEAN;
+    Boolean(bool value) : value(value) { 
+        this->valueType = SPL_BOOLEAN; 
     }
 
     virtual ConstValue::Value getValue() override {

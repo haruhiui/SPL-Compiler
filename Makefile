@@ -31,4 +31,4 @@ $(target): $(objs)
 	clang++ $(flags) -g -O3 -o $@ $^ 
 
 clean: 
-	-rm -f $(target) $(flex_out) $(bison_out_h) $(bison_out_c) *.o 
+	-rm -f $(flex_out) $(bison_out_h) $(bison_out_c) *.o 
