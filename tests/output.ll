@@ -24,6 +24,8 @@ target triple = "x86_64-pc-linux-gnu"
 @.str.8 = constant [4 x i8] c"%s\0A\00"
 @1 = private unnamed_addr constant [5 x i8] c"qwer\00", align 1
 @.str.9 = constant [4 x i8] c"%s\0A\00"
+@2 = private unnamed_addr constant [5 x i8] c"zxcv\00", align 1
+@.str.10 = constant [4 x i8] c"%s\0A\00"
 
 define void @main() {
 entrypoint:
@@ -51,6 +53,9 @@ entrypoint:
   %tmp15 = load i8*, i8** @sv
   %printf16 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str.8, i32 0, i32 0), i8* %tmp15)
   %printf17 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str.9, i32 0, i32 0), i8* getelementptr inbounds ([5 x i8], [5 x i8]* @1, i32 0, i32 0))
+  store i8* getelementptr inbounds ([5 x i8], [5 x i8]* @2, i32 0, i32 0), i8** @sv
+  %tmp18 = load i8*, i8** @sv
+  %printf19 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str.10, i32 0, i32 0), i8* %tmp18)
   ret void
 }
 

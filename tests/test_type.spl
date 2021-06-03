@@ -32,5 +32,8 @@ begin
     writeln(sv);
     writeln("qwer"); 
 
+    sv := "zxcv"; 
+    writeln(sv); 
+
 end 
 . 
