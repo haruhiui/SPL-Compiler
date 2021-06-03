@@ -2342,7 +2342,7 @@ yyreduce:
   case 85:
 #line 615 "spl.y"
         { 
-		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), BinaryExpression::BinaryOperator::SPL_GE, (yyvsp[0].expression)); 
+		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), ">=", (yyvsp[0].expression)); 
 	}
 #line 2348 "y.tab.cpp"
     break;
@@ -2350,7 +2350,7 @@ yyreduce:
   case 86:
 #line 619 "spl.y"
         { 
-		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), BinaryExpression::BinaryOperator::SPL_GT, (yyvsp[0].expression)); 
+		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), ">", (yyvsp[0].expression)); 
 	}
 #line 2356 "y.tab.cpp"
     break;
@@ -2358,7 +2358,7 @@ yyreduce:
   case 87:
 #line 623 "spl.y"
         { 
-		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), BinaryExpression::BinaryOperator::SPL_LE, (yyvsp[0].expression)); 
+		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), "<=", (yyvsp[0].expression)); 
 	}
 #line 2364 "y.tab.cpp"
     break;
@@ -2366,7 +2366,7 @@ yyreduce:
   case 88:
 #line 627 "spl.y"
         { 
-		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), BinaryExpression::BinaryOperator::SPL_LT, (yyvsp[0].expression)); 
+		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), "<", (yyvsp[0].expression)); 
 	}
 #line 2372 "y.tab.cpp"
     break;
@@ -2374,7 +2374,7 @@ yyreduce:
   case 89:
 #line 631 "spl.y"
         { 
-		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), BinaryExpression::BinaryOperator::SPL_EQUAL, (yyvsp[0].expression)); 
+		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), "=", (yyvsp[0].expression)); 
 	}
 #line 2380 "y.tab.cpp"
     break;
@@ -2382,7 +2382,7 @@ yyreduce:
   case 90:
 #line 635 "spl.y"
         { 
-		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), BinaryExpression::BinaryOperator::SPL_UNEQUAL, (yyvsp[0].expression)); 
+		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), "<>", (yyvsp[0].expression)); 
 	}
 #line 2388 "y.tab.cpp"
     break;
@@ -2398,7 +2398,7 @@ yyreduce:
   case 92:
 #line 646 "spl.y"
         { 
-		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), BinaryExpression::BinaryOperator::SPL_PLUS, (yyvsp[0].expression)); 
+		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), "+", (yyvsp[0].expression)); 
 	}
 #line 2404 "y.tab.cpp"
     break;
@@ -2406,7 +2406,7 @@ yyreduce:
   case 93:
 #line 650 "spl.y"
         { 
-		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), BinaryExpression::BinaryOperator::SPL_MINUS, (yyvsp[0].expression)); 
+		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), "-", (yyvsp[0].expression)); 
 	}
 #line 2412 "y.tab.cpp"
     break;
@@ -2414,7 +2414,7 @@ yyreduce:
   case 94:
 #line 654 "spl.y"
         { 
-		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), BinaryExpression::BinaryOperator::SPL_OR, (yyvsp[0].expression)); 
+		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), "or", (yyvsp[0].expression)); 
 	}
 #line 2420 "y.tab.cpp"
     break;
@@ -2430,7 +2430,7 @@ yyreduce:
   case 96:
 #line 665 "spl.y"
         { 
-		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), BinaryExpression::BinaryOperator::SPL_MUL, (yyvsp[0].expression)); 
+		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), "*", (yyvsp[0].expression)); 
 	}
 #line 2436 "y.tab.cpp"
     break;
@@ -2438,7 +2438,7 @@ yyreduce:
   case 97:
 #line 669 "spl.y"
         { 
-		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), BinaryExpression::BinaryOperator::SPL_DIV, (yyvsp[0].expression)); 
+		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), "/", (yyvsp[0].expression)); 
 	}
 #line 2444 "y.tab.cpp"
     break;
@@ -2446,7 +2446,7 @@ yyreduce:
   case 98:
 #line 673 "spl.y"
         { 
-		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), BinaryExpression::BinaryOperator::SPL_MOD, (yyvsp[0].expression)); 
+		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), "mod", (yyvsp[0].expression)); 
 	}
 #line 2452 "y.tab.cpp"
     break;
@@ -2454,7 +2454,7 @@ yyreduce:
   case 99:
 #line 677 "spl.y"
         { 
-		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), BinaryExpression::BinaryOperator::SPL_AND, (yyvsp[0].expression)); 
+		(yyval.expression) = new BinaryExpression((yyvsp[-2].expression), "and", (yyvsp[0].expression)); 
 	}
 #line 2460 "y.tab.cpp"
     break;
@@ -2518,7 +2518,7 @@ yyreduce:
   case 107:
 #line 712 "spl.y"
         { 
-		(yyval.expression) = new BinaryExpression(new Boolean(true), BinaryExpression::BinaryOperator::SPL_XOR, (yyvsp[0].expression)); 
+		(yyval.expression) = new BinaryExpression(new Boolean(true), "xor", (yyvsp[0].expression)); 
 	}
 #line 2524 "y.tab.cpp"
     break;
@@ -2526,7 +2526,7 @@ yyreduce:
   case 108:
 #line 716 "spl.y"
         { 
-		(yyval.expression) = new BinaryExpression(new Integer(0), BinaryExpression::BinaryOperator::SPL_MINUS, (yyvsp[0].expression)); 
+		(yyval.expression) = new BinaryExpression(new Integer(0), "-", (yyvsp[0].expression)); 
 	}
 #line 2532 "y.tab.cpp"
     break;

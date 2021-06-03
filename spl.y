@@ -613,27 +613,27 @@ expression_list
 expression 
 	: expression GE expr
 	{ 
-		$$ = new BinaryExpression($1, BinaryExpression::BinaryOperator::SPL_GE, $3); 
+		$$ = new BinaryExpression($1, ">=", $3); 
 	}
 	| expression GT expr
 	{ 
-		$$ = new BinaryExpression($1, BinaryExpression::BinaryOperator::SPL_GT, $3); 
+		$$ = new BinaryExpression($1, ">", $3); 
 	}
 	| expression LE expr
 	{ 
-		$$ = new BinaryExpression($1, BinaryExpression::BinaryOperator::SPL_LE, $3); 
+		$$ = new BinaryExpression($1, "<=", $3); 
 	}
 	| expression LT expr
 	{ 
-		$$ = new BinaryExpression($1, BinaryExpression::BinaryOperator::SPL_LT, $3); 
+		$$ = new BinaryExpression($1, "<", $3); 
 	}
 	| expression EQUAL expr
 	{ 
-		$$ = new BinaryExpression($1, BinaryExpression::BinaryOperator::SPL_EQUAL, $3); 
+		$$ = new BinaryExpression($1, "=", $3); 
 	}
 	| expression UNEQUAL expr
 	{ 
-		$$ = new BinaryExpression($1, BinaryExpression::BinaryOperator::SPL_UNEQUAL, $3); 
+		$$ = new BinaryExpression($1, "<>", $3); 
 	}
 	| expr
 	{ 
@@ -644,15 +644,15 @@ expression
 expr 
 	: expr PLUS term
 	{ 
-		$$ = new BinaryExpression($1, BinaryExpression::BinaryOperator::SPL_PLUS, $3); 
+		$$ = new BinaryExpression($1, "+", $3); 
 	}
 	| expr MINUS term
 	{ 
-		$$ = new BinaryExpression($1, BinaryExpression::BinaryOperator::SPL_MINUS, $3); 
+		$$ = new BinaryExpression($1, "-", $3); 
 	}
 	| expr OR term
 	{ 
-		$$ = new BinaryExpression($1, BinaryExpression::BinaryOperator::SPL_OR, $3); 
+		$$ = new BinaryExpression($1, "or", $3); 
 	}
 	| term
 	{ 
@@ -663,19 +663,19 @@ expr
 term 
 	: term MUL factor
 	{ 
-		$$ = new BinaryExpression($1, BinaryExpression::BinaryOperator::SPL_MUL, $3); 
+		$$ = new BinaryExpression($1, "*", $3); 
 	}
 	| term DIV factor
 	{ 
-		$$ = new BinaryExpression($1, BinaryExpression::BinaryOperator::SPL_DIV, $3); 
+		$$ = new BinaryExpression($1, "/", $3); 
 	}
 	| term MOD factor
 	{ 
-		$$ = new BinaryExpression($1, BinaryExpression::BinaryOperator::SPL_MOD, $3); 
+		$$ = new BinaryExpression($1, "mod", $3); 
 	}
 	| term AND factor
 	{ 
-		$$ = new BinaryExpression($1, BinaryExpression::BinaryOperator::SPL_AND, $3); 
+		$$ = new BinaryExpression($1, "and", $3); 
 	}
 	| factor
 	{ 
@@ -710,11 +710,11 @@ factor
 	}
 	| NOT factor
 	{ 
-		$$ = new BinaryExpression(new Boolean(true), BinaryExpression::BinaryOperator::SPL_XOR, $2); 
+		$$ = new BinaryExpression(new Boolean(true), "xor", $2); 
 	}
 	| MINUS factor
 	{ 
-		$$ = new BinaryExpression(new Integer(0), BinaryExpression::BinaryOperator::SPL_MINUS, $2); 
+		$$ = new BinaryExpression(new Integer(0), "-", $2); 
 	}
 	| name LB expression RB
 	{ 

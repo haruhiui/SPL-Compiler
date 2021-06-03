@@ -5,7 +5,7 @@ using namespace std;
 
 void LOG_I(const string & msg)
 {
-    cout << "[INFO] " << msg << endl;
+    // cout << "[INFO] " << msg << endl;
 }
 
 void printType(llvm::Value* v)
@@ -165,40 +165,41 @@ llvm::Constant* AstType::initValue(ConstValue *v)
     }
 }
 
-llvm::Value *BinaryOp(llvm::Value *lValue, BinaryExpression::BinaryOperator op, llvm::Value *rValue)
+llvm::Value *BinaryOp(llvm::Value *lValue, string op, llvm::Value *rValue)
 {
 //        printType(lValue);
 //        printType(rValue);
     bool flag = lValue->getType()->isDoubleTy() || rValue->getType()->isDoubleTy();
-    switch (op) {
-
-        case BinaryExpression::SPL_PLUS: return flag ? TheBuilder.CreateFAdd(lValue, rValue, "addtmpf") : TheBuilder.CreateAdd(lValue, rValue, "addtmpi");
-
-        case BinaryExpression::SPL_MINUS: return flag ? TheBuilder.CreateFSub(lValue, rValue, "subtmpf") : TheBuilder.CreateSub(lValue, rValue, "subtmpi");
-
-        case BinaryExpression::SPL_MUL: return flag ? TheBuilder.CreateFMul(lValue, rValue, "multmpf") : TheBuilder.CreateMul(lValue, rValue, "multmpi");
-
-        case BinaryExpression::SPL_DIV: return TheBuilder.CreateSDiv(lValue, rValue, "tmpDiv");
-
-        case BinaryExpression::SPL_GE: return TheBuilder.CreateICmpSGE(lValue, rValue, "tmpSGE");
-
-        case BinaryExpression::SPL_GT: return TheBuilder.CreateICmpSGT(lValue, rValue, "tmpSGT");
-
-        case BinaryExpression::SPL_LT: return TheBuilder.CreateICmpSLT(lValue, rValue, "tmpSLT");
-
-        case BinaryExpression::SPL_LE: return TheBuilder.CreateICmpSLE(lValue, rValue, "tmpSLE");
-
-        case BinaryExpression::SPL_EQUAL: return TheBuilder.CreateICmpEQ(lValue, rValue, "tmpEQ");
-
-        case BinaryExpression::SPL_UNEQUAL: return TheBuilder.CreateICmpNE(lValue, rValue, "tmpNE");
-
-        case BinaryExpression::SPL_OR: return TheBuilder.CreateOr(lValue, rValue, "tmpOR");
-
-        case BinaryExpression::SPL_MOD: return TheBuilder.CreateSRem(lValue, rValue, "tmpSREM");
-
-        case BinaryExpression::SPL_AND: return TheBuilder.CreateAnd(lValue, rValue, "tmpAND");
-
-        case BinaryExpression::SPL_XOR: return TheBuilder.CreateXor(lValue, rValue, "tmpXOR");
+    if (op == "+") {
+        return flag ? TheBuilder.CreateFAdd(lValue, rValue, "addtmpf") : TheBuilder.CreateAdd(lValue, rValue, "addtmpi");
+    } else if (op == "-") {
+        return flag ? TheBuilder.CreateFSub(lValue, rValue, "subtmpf") : TheBuilder.CreateSub(lValue, rValue, "subtmpi");
+    } else if (op == "*") {
+        return flag ? TheBuilder.CreateFMul(lValue, rValue, "multmpf") : TheBuilder.CreateMul(lValue, rValue, "multmpi");
+    } else if (op == "/") {
+        return TheBuilder.CreateSDiv(lValue, rValue, "tmpDiv");
+    } else if (op == ">=") {
+        return TheBuilder.CreateICmpSGE(lValue, rValue, "tmpSGE");
+    } else if (op == ">") {
+        return TheBuilder.CreateICmpSGT(lValue, rValue, "tmpSGT");
+    } else if (op == "<") {
+        return TheBuilder.CreateICmpSLT(lValue, rValue, "tmpSLT");
+    } else if (op == "<=") {
+        return TheBuilder.CreateICmpSLE(lValue, rValue, "tmpSLE");
+    } else if (op == "=") {
+        return TheBuilder.CreateICmpEQ(lValue, rValue, "tmpEQ");
+    } else if (op == "<>") {
+        return TheBuilder.CreateICmpNE(lValue, rValue, "tmpNE");
+    } else if (op == "or") {
+        return TheBuilder.CreateOr(lValue, rValue, "tmpOR");
+    } else if (op == "mod") {
+        return TheBuilder.CreateSRem(lValue, rValue, "tmpSREM");
+    } else if (op == "and") {
+        return TheBuilder.CreateAnd(lValue, rValue, "tmpAND");
+    } else if (op == "xor") {
+        return TheBuilder.CreateXor(lValue, rValue, "tmpXOR");
+    } else {
+        return nullptr;
     }
 }
 
@@ -279,7 +280,7 @@ llvm::Value *RecordType::codeGen(Generator & generator) {
 }
 
 llvm::Value *ConstRangeType::mapIndex(llvm::Value *indexValue, Generator & generator) {
-    return BinaryOp(indexValue, BinaryExpression::SPL_MINUS, this->lowBound->codeGen(generator));
+    return BinaryOp(indexValue, "-", this->lowBound->codeGen(generator));
 }
 
 llvm::Value *ConstRangeType::codeGen(Generator & generator) {
@@ -289,7 +290,7 @@ llvm::Value *ConstRangeType::codeGen(Generator & generator) {
 }
 
 llvm::Value *EnumRangeType::mapIndex(llvm::Value *indexValue, Generator & generator) {
-    return BinaryOp(indexValue, BinaryExpression::SPL_MINUS, this->lowValue);
+    return BinaryOp(indexValue, "-", this->lowValue);
 }
 
 int64_t getActualValue(llvm::Value *v) {
@@ -487,6 +488,7 @@ llvm::Value *BinaryExpression::codeGen(Generator & generator) {
     llvm::Value* L = this->lhs->codeGen(generator);
     llvm::Value* R = this->rhs->codeGen(generator);
     if (!L || !R) return nullptr;
+
     return BinaryOp(L, this->op, R);
 }
 
@@ -843,7 +845,7 @@ llvm::Value *CaseStatement::codeGen(Generator & generator) {
     {
         //Switch
         TheBuilder.SetInsertPoint(switchBBs[i]);
-        condValue = BinaryOp(cmpValue, BinaryExpression::SPL_EQUAL, (*caseExprList)[i]->value->codeGen(generator));
+        condValue = BinaryOp(cmpValue, "=", (*caseExprList)[i]->value->codeGen(generator));
         if (i < this->caseExprList->size() - 1)
         {
             TheBuilder.CreateCondBr(condValue, caseBBs[i], switchBBs[i + 1]);
@@ -1178,7 +1180,7 @@ string AssignStatement::getJson() {
 string BinaryExpression::getJson() {
     vector<string> children;
     children.push_back(lhs->getJson());
-    children.push_back(getJsonString(opString[op]));
+    children.push_back(getJsonString(this->op));
     children.push_back(rhs->getJson());
 
     return getJsonString("BinaryExpression", children);

@@ -617,10 +617,9 @@ private:
     vector<string> opString{"+", "-", "*", "/", ">=", ">", "<", "<=", "==", "!=", "or", "mod", "and", "xor"};
     Expression *lhs;
     Expression *rhs;
-    BinaryOperator op;
-
+    string op;
 public: 
-    BinaryExpression(Expression *lhs, BinaryOperator op, Expression *rhs) : lhs(lhs), op(op), rhs(rhs) {     }
+    BinaryExpression(Expression *lhs, string op, Expression *rhs) : lhs(lhs), op(op), rhs(rhs) {     }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
     virtual string getJson() override;
