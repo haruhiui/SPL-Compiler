@@ -1,0 +1,7 @@
+program h;
+var a : string;
+begin
+    read(a);
+    writeln(a);
+end
+.
