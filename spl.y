@@ -274,19 +274,7 @@ type_decl
 simple_type_decl 
 	: SYS_TYPE
 	{
-		if(*$1 == "integer") {
-			$$ = new AstType(SPL_INTEGER);
-		} else if(*$1 == "boolean") {
-			$$ = new AstType(SPL_BOOLEAN);
-		} else if(*$1 == "real") {
-			$$ = new AstType(SPL_REAL);
-		} else if(*$1 == "char") {
-			$$ = new AstType(SPL_CHAR);
-		} else if(*$1 == "string") {
-			$$ = new AstType(SPL_STRING);
-		} else {
-			cout << "wrong SYS_TYPE" << endl;
-		}
+		$$ = new AstType(*$1);
 	}
 	| name
 	{ 
@@ -389,7 +377,8 @@ var_decl
 routine_part
 	: routine_part function_decl
 	{ 
-		$$ = $1; $$->push_back($2); 
+		$$ = $1; 
+		$$->push_back($2); 
 	}
 	| routine_part procedure_decl
 	{ 
@@ -415,7 +404,8 @@ routine_part
 function_decl 
 	: function_head SEMI sub_routine SEMI
 	{ 
-		$$ = $1; $$->setRoutine($3); 
+		$$ = $1; 
+		$$->setRoutine($3); 
 	}
 	;
 
@@ -466,11 +456,13 @@ para_decl_list
 para_type_list 
 	: var_para_list COLON simple_type_decl
 	{ 
-		$$ = $1, $$->setType($3);   // ? 
+		$$ = $1;
+		$$->setType($3);   // ? 
 	}
 	| val_para_list COLON simple_type_decl
 	{ 
-		$$ = $1, $$->setType($3);   // ? 
+		$$ = $1;
+		$$->setType($3);   // ? 
 	}
 	;
 
@@ -810,11 +802,13 @@ case_stmt
 case_expr_list 
 	: case_expr_list case_expr
 	{ 
-		$$ = $1; $$->push_back($2); 
+		$$ = $1; 
+		$$->push_back($2); 
 	}
 	| case_expr
 	{ 
-		$$ = new CaseExprList(); $$->push_back($1); 
+		$$ = new CaseExprList(); 
+		$$->push_back($1); 
 	}
 	;
 

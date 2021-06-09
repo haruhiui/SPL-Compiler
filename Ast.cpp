@@ -43,17 +43,20 @@ llvm::AllocaInst *CreateEntryBlockAlloca(llvm::Function *TheFunction, llvm::Stri
   return TmpB.CreateAlloca(type, nullptr, VarName);
 }
 
-llvm::Type* toLLVMPtrType(const BuildInType & type)
+llvm::Type* toLLVMPtrType(string type)
 {
-    switch (type)
-    {
-        case SPL_INTEGER: return llvm::Type::getInt32PtrTy(*TheContext);
-        case SPL_REAL: return llvm::Type::getDoublePtrTy(*TheContext);
-        case SPL_CHAR: return llvm::Type::getInt8PtrTy(*TheContext);
-        case SPL_BOOLEAN: return llvm::Type::getInt1PtrTy(*TheContext);
-        case SPL_STRING: return llvm::Type::getInt8PtrTy(*TheContext);
-        default: throw logic_error("Not supported pointer type.");
+    if (type == "integer"){
+        return llvm::Type::getInt32PtrTy(*TheContext);
+    } else if (type == "real") {
+        return llvm::Type::getDoublePtrTy(*TheContext);
+    } else if (type == "char") {
+        return llvm::Type::getInt8PtrTy(*TheContext);
+    } else if (type == "boolean") {
+        return llvm::Type::getInt1PtrTy(*TheContext);
+    } else if (type == "string") {
+        return llvm::Type::getInt8PtrTy(*TheContext);
     }
+    throw logic_error("Undefined type!");
 }
 
 llvm::Type* AstType::toLLVMType()
@@ -72,15 +75,19 @@ llvm::Type* AstType::toLLVMType()
         case SPL_CONST_RANGE: return TheBuilder.getInt32Ty();
         case SPL_ENUM_RANGE: return TheBuilder.getInt32Ty();
         case SPL_BUILD_IN:
-            switch (buildInType)
-            {
-                case SPL_INTEGER: return TheBuilder.getInt32Ty();
-                case SPL_REAL: return TheBuilder.getDoubleTy();
-                case SPL_CHAR: return TheBuilder.getInt8Ty();
-                case SPL_BOOLEAN: return TheBuilder.getInt1Ty();
-                // I want to beat cby up 
+            if (buildInType == "integer") {
+                return TheBuilder.getInt32Ty();
+            } else if (buildInType == "real") {
+                return TheBuilder.getDoubleTy();
+            } else if (buildInType == "char") {
+                return TheBuilder.getInt8Ty();
+            } else if (buildInType == "boolean") {
+                return TheBuilder.getInt1Ty();
+            } else if (buildInType == "string") {
+                // I want to beat cby up
                 // case SPL_STRING: return TheBuilder.getInt8Ty();
-                case SPL_STRING: return TheBuilder.getInt8PtrTy(); 
+                // well you can just give it try ;)
+                return TheBuilder.getInt8PtrTy();
             }
             break;
         case SPL_ENUM:
@@ -88,6 +95,7 @@ llvm::Type* AstType::toLLVMType()
         case SPL_USER_DEFINE:
         case SPL_VOID: return TheBuilder.getVoidTy();
     }
+    return nullptr;
 }
 
 llvm::Constant* AstType::initValue(ConstValue *v)
@@ -117,13 +125,16 @@ llvm::Constant* AstType::initValue(ConstValue *v)
             case SPL_CONST_RANGE:
             case SPL_ENUM_RANGE: return TheBuilder.getInt32(v->getValue().i);
             case SPL_BUILD_IN:
-                switch (buildInType)
-                {
-                    case SPL_INTEGER: return TheBuilder.getInt32(v->getValue().i);
-                    case SPL_REAL: return llvm::ConstantFP::get(TheBuilder.getDoubleTy(), v->getValue().r);
-                    case SPL_CHAR: return TheBuilder.getInt8(v->getValue().c);
-                    case SPL_BOOLEAN: return TheBuilder.getInt1(v->getValue().b);
-                    case SPL_STRING: return TheBuilder.CreateGlobalStringPtr(llvm::StringRef((const char*)(v->getValue().s)));
+                if (buildInType == "integer"){
+                    return TheBuilder.getInt32(v->getValue().i);
+                } else if (buildInType == "real") {
+                    return llvm::ConstantFP::get(TheBuilder.getDoubleTy(), v->getValue().r);
+                } else if (buildInType == "char") {
+                    return TheBuilder.getInt8(v->getValue().c);
+                } else if (buildInType == "boolean") {
+                    return TheBuilder.getInt1(v->getValue().b);
+                } else if (buildInType == "string") {
+                    return TheBuilder.CreateGlobalStringPtr(llvm::StringRef((const char*)(v->getValue().s)));
                 }
                 break;
             case SPL_ENUM:
@@ -154,13 +165,16 @@ llvm::Constant* AstType::initValue(ConstValue *v)
             case SPL_CONST_RANGE:
             case SPL_ENUM_RANGE: return TheBuilder.getInt32(0);
             case SPL_BUILD_IN:
-                switch (buildInType)
-                {
-                    case SPL_INTEGER: return TheBuilder.getInt32(0);
-                    case SPL_REAL: return llvm::ConstantFP::get(TheBuilder.getDoubleTy(), 0.0);
-                    case SPL_CHAR: return TheBuilder.getInt8(0);
-                    case SPL_BOOLEAN: return TheBuilder.getInt1(0);
-                    case SPL_STRING: return TheBuilder.getInt8(0);
+                if (buildInType == "integer") {
+                    return TheBuilder.getInt32(0);
+                } else if (buildInType == "real") {
+                    return llvm::ConstantFP::get(TheBuilder.getDoubleTy(), 0.0);
+                } else if (buildInType == "char") {
+                    return TheBuilder.getInt8(0);
+                } else if (buildInType == "boolean") {
+                    return TheBuilder.getInt1(0);
+                } else if (buildInType == "string") {
+                    return TheBuilder.getInt8(0);
                 }
                 break;
             case SPL_ENUM:
@@ -169,6 +183,7 @@ llvm::Constant* AstType::initValue(ConstValue *v)
             case SPL_VOID: return nullptr;
         }
     }
+    return nullptr;
 }
 
 llvm::Value *BinaryOp(llvm::Value *L, string op, llvm::Value *R)
@@ -243,7 +258,7 @@ llvm::Value *Boolean::codeGen(Generator & generator) {
 llvm::Value *ConstDeclaration::codeGen(Generator & generator) {
     LOG_I("Const Declaration");
     string name = this->name->getName();
-    this->type = new AstType(this->value->getType());
+    this->type = new AstType(this->value->valueType);
     if (this->isGlobal()) {
          return new llvm::GlobalVariable(*generator.TheModule, this->type->toLLVMType(), true, llvm::GlobalValue::ExternalLinkage, this->type->initValue(this->value), name);
     } else {
@@ -1057,43 +1072,28 @@ string RecordType::getJson() {
 }
 
 string AstType::getJson() {
-    switch (type)
-    {
+    switch (type){
     case SPL_ARRAY:
         return arrayType->getJson();
-        break;
     case SPL_RECORD:
         return recordType->getJson();
-        break;
     case SPL_ENUM:
         return enumType->getJson();
-        break;
     case SPL_CONST_RANGE:
         return constRangeType->getJson();
-        break;
     case SPL_ENUM_RANGE:
         return enumRangeType->getJson();
-        break;
     case SPL_BUILD_IN:
-        switch (buildInType)
-        {
-        case SPL_INTEGER:
+        if (buildInType == "integer"){
             return jsonfy("SYS_TYPE", jsonfy("Integer"));
-            break;
-        case SPL_REAL:
+        } else if (buildInType == "real") {
             return jsonfy("SYS_TYPE", jsonfy("Real"));
-            break;
-        case SPL_CHAR:
+        } else if (buildInType == "char") {
             return jsonfy("SYS_TYPE", jsonfy("Char"));
-            break;
-        case SPL_BOOLEAN:
+        } else if (buildInType == "boolean") {
             return jsonfy("SYS_TYPE", jsonfy("Boolean"));
-            break;
-        case SPL_STRING:
+        } else if (buildInType == "string") {
             return jsonfy("SYS_TYPE", jsonfy("String"));
-            break;
-        default:
-            break;
         }
         break;
     case SPL_USER_DEFINE:
@@ -1101,8 +1101,8 @@ string AstType::getJson() {
         break;
     default:
         return jsonfy("ErrorType");
-        break;
     }
+    return nullptr;
 }
 
 string TypeDeclaration::getJson() {

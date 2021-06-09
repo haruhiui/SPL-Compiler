@@ -66,19 +66,8 @@ using StatementList = vector<Statement *>;
 using ArgsList = vector<Expression *>;
 using CaseExprList = vector<CaseExpression *>;
 
-// SPL 内置类型
-enum BuildInType
-{
-    SPL_INTEGER,
-    SPL_REAL,
-    SPL_CHAR,
-    SPL_BOOLEAN,
-    SPL_STRING
-};
-
-// AST 节点
-class Node
-{
+// ast node
+class Node{
 public:
     // generate intermediate code for llvm
     virtual llvm::Value *codeGen(Generator & generator) = 0;
@@ -89,14 +78,11 @@ public:
     virtual ~Node() { }
 };
 
-// 表达式，特征是能返回值或能存储值
-class Expression : public Node
-{
-};
+// expression
+class Expression : public Node{};
 
-// 语句，特征是能完成某些操作
-class Statement : public Node
-{
+// statement
+class Statement : public Node{
 private:
     int label = -1;
 
@@ -113,9 +99,8 @@ public:
     void backward(Generator & generator);
 };
 
-// 标识符
-class Identifier : public Expression
-{
+// identifier
+class Identifier : public Expression{
 private:
     string *name;
 
@@ -131,9 +116,8 @@ public:
     virtual llvm::Value *codeGen(Generator & generator) override;
 };
 
-// 常量
-class ConstValue : public Expression
-{
+// const value
+class ConstValue : public Expression{
 public:
     union Value {
         int i;
@@ -142,30 +126,24 @@ public:
         char c;
         string* s;
     };
-    BuildInType valueType; 
+    string valueType; 
     
     virtual ConstValue::Value getValue() = 0;
     
     virtual ConstValue *operator-() = 0;
-
-    BuildInType getType() {
-        return valueType; 
-    }
     
     virtual bool isValidConstRangeType() {
-        BuildInType t = getType();
-        return t == SPL_INTEGER || t == SPL_CHAR;
+        return this->valueType == "integer" || this->valueType == "char";
     }
 };
 
-class Integer : public ConstValue
-{
+class Integer : public ConstValue{
 private:
     int value;
 
 public:
     Integer(int value) : value(value) {
-        this->valueType = SPL_INTEGER; 
+        this->valueType = "integer"; 
     }
 
     virtual ConstValue::Value getValue() override {
@@ -183,14 +161,13 @@ public:
     virtual string getJson() override;
 };
 
-class Real : public ConstValue
-{
+class Real : public ConstValue{
 private:
     double value;
 
 public:
     Real(double value) : value(value) {
-        this->valueType = SPL_REAL; 
+        this->valueType = "real"; 
     }
 
     virtual ConstValue::Value getValue() override {
@@ -208,14 +185,13 @@ public:
     virtual string getJson() override;
 };
 
-class Char : public ConstValue
-{
+class Char : public ConstValue{
 private:
     char value;
 
 public:
     Char(char value) : value(value) { 
-        this->valueType = SPL_CHAR; 
+        this->valueType = "char"; 
     }
 
     virtual ConstValue::Value getValue() override {
@@ -233,14 +209,13 @@ public:
     virtual string getJson() override;
 };
 
-class String : public ConstValue
-{
+class String : public ConstValue{
 private:
     string* value;
 
 public:
     String(string* value) : value(value) { 
-        this->valueType = SPL_STRING; 
+        this->valueType = "string"; 
     }
 
     virtual ConstValue::Value getValue() override {
@@ -259,14 +234,13 @@ public:
     virtual string getJson() override;
 };
 
-class Boolean : public ConstValue
-{
+class Boolean : public ConstValue{
 private:
     bool value;
 
 public:
     Boolean(bool value) : value(value) { 
-        this->valueType = SPL_BOOLEAN; 
+        this->valueType = "boolean"; 
     }
 
     virtual ConstValue::Value getValue() override {
@@ -284,9 +258,8 @@ public:
     virtual string getJson() override;
 };
 
-// 常量声明语句
-class ConstDeclaration : public Statement
-{
+// declare const value
+class ConstDeclaration : public Statement{
 private:
     Identifier *name;
     ConstValue *value;
@@ -309,8 +282,7 @@ public:
     }
 };
 
-class EnumType : public Statement 
-{
+class EnumType : public Statement {
 private:
     NameList *enumList;
 
@@ -322,8 +294,7 @@ public:
     virtual string getJson() override;
 };
 
-class AstArrayType : public Statement 
-{
+class AstArrayType : public Statement {
 public:
     AstType *range;
     AstType *type;
@@ -335,8 +306,7 @@ public:
     virtual string getJson() override;
 };
 
-class ConstRangeType : public Statement 
-{
+class ConstRangeType : public Statement {
 private:
     ConstValue *lowBound;
     ConstValue *upBound;
@@ -350,8 +320,8 @@ public:
     
     size_t size() {
         int s;
-        if (lowBound->getType() == upBound->getType() && lowBound->isValidConstRangeType()) {
-            if (lowBound->getType() == SPL_INTEGER) {
+        if (lowBound->valueType == upBound->valueType && lowBound->isValidConstRangeType()) {
+            if (lowBound->valueType == "integer") {
             //    std::cout << lowBound->getValue().i << ".." << upBound->getValue().i << std::endl;
                 s = upBound->getValue().i - lowBound->getValue().i + 1;
             } else {
@@ -370,8 +340,7 @@ public:
     llvm::Value *mapIndex(llvm::Value* indexValue, Generator& generator);
 };
 
-class EnumRangeType : public Statement 
-{
+class EnumRangeType : public Statement {
 private:
     Identifier *lowBound;
     Identifier *upBound;
@@ -390,8 +359,7 @@ public:
     size_t size();
 };
 
-class FieldDeclaration : public Statement 
-{
+class FieldDeclaration : public Statement {
 private:
     NameList *nameList;
     AstType *type;
@@ -417,7 +385,7 @@ public:
     virtual string getJson() override;
 };
 
-// 类型
+// abstract type
 class AstType : public Statement {
 public:
     enum TypeOfType {
@@ -436,7 +404,7 @@ public:
     EnumType *enumType;
     ConstRangeType *constRangeType;
     EnumRangeType *enumRangeType;
-    BuildInType buildInType;
+    string buildInType;
     Identifier *userDefineType;
     TypeOfType type;
 
@@ -445,7 +413,7 @@ public:
     AstType(EnumType *et) : enumType(et), type(SPL_ENUM) { }
     AstType(ConstRangeType *crt) : constRangeType(crt), type(SPL_CONST_RANGE) { }
     AstType(EnumRangeType *ert) : enumRangeType(ert), type(SPL_ENUM_RANGE) { }
-    AstType(BuildInType bt) : buildInType(bt), type(SPL_BUILD_IN) { }
+    AstType(string buildIn) : buildInType(buildIn), type(SPL_BUILD_IN) { }
     AstType(Identifier *udt) : userDefineType(udt), type(SPL_USER_DEFINE) { }
     AstType() : type(SPL_VOID) { }
 
@@ -456,8 +424,7 @@ public:
     llvm::Constant* initValue(ConstValue *v = nullptr);
 };
 
-class TypeDeclaration : public Statement 
-{
+class TypeDeclaration : public Statement {
 private:
     Identifier *name;
     AstType *type;
@@ -470,8 +437,7 @@ public:
     virtual string getJson() override;
 };
 
-class VarDeclaration : public Statement 
-{
+class VarDeclaration : public Statement {
 private:
     NameList *nameList;
     AstType *type;
@@ -493,8 +459,7 @@ public:
     }
 };
 
-class FuncDeclaration : public Statement 
-{
+class FuncDeclaration : public Statement {
 private:
     Identifier *name;
     ParaList *paraList;
@@ -520,8 +485,7 @@ public:
     virtual string getJson() override;
 };
 
-class Parameter : public Statement 
-{
+class Parameter : public Statement {
 public: 
     bool isVar;
     NameList *nameList;
@@ -543,8 +507,7 @@ public:
     virtual string getJson() override;
 };
 
-class Routine : public Node 
-{
+class Routine : public Node {
 private:
     ConstDeclList *constDeclList;
     VarDeclList *varDeclList;
@@ -574,8 +537,7 @@ public:
     }
 };
 
-class Program : public Node 
-{
+class Program : public Node {
 private:
     string *programID;
     Routine *routine;
@@ -609,8 +571,7 @@ public:
     virtual string getJson() override;
 };
 
-class BinaryExpression : public Expression 
-{
+class BinaryExpression : public Expression {
 private:
     Expression *lhs;
     Expression *rhs;
