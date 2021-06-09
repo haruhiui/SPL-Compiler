@@ -665,6 +665,11 @@ llvm::Value *SysProcedureCall::SysProcRead(Generator & generator)
     {
         formatStr += "%c"; 
     }
+    // better not support 
+    // else if (argValue->getType() == TheBuilder.getInt8PtrTy()) 
+    // {
+    //     formatStr += "%s"; 
+    // }
     else if (argValue->getType() == TheBuilder.getInt1Ty())
     {
         formatStr += "%d";
@@ -675,7 +680,7 @@ llvm::Value *SysProcedureCall::SysProcRead(Generator & generator)
     }
     else
     {
-        throw logic_error("[ERROR]Invalid type to read.");
+        throw logic_error("[ERROR] Invalid type to read.");
     }
     params.push_back(argAddr);
     params.insert(params.begin(), TheBuilder.CreateGlobalStringPtr(formatStr));
@@ -690,7 +695,7 @@ llvm::Value *SysProcedureCall::codeGen(Generator & generator) {
         case SPL_READ: res = this->SysProcRead(generator); break;
         case SPL_WRITE: res = this->SysProcWrite(generator, false); break;
         case SPL_WRITELN: res = this->SysProcWrite(generator, true); break;
-        case SPL_ERROR_PROCEDURE: throw domain_error("[ERROR]Unknown System Procedure");
+        case SPL_ERROR_PROCEDURE: throw domain_error("[ERROR] Unknown System Procedure");
     }
     this->backward(generator);
     return res;
