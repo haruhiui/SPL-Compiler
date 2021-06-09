@@ -12,6 +12,25 @@ var
     bv : boolean; 
     cv : char; 
     sv : string; 
+    num : integer; 
+
+// if the function or procedure doesn't have any parameters, just define it like: function func: ..., 
+// there's no parentheses after function name 
+function inputNum(str: string): integer; 
+begin 
+    writeln(str); 
+    read(inputNum); 
+end; 
+
+procedure printAll; 
+begin 
+    write("    iv: ", iv); 
+    write("    rv: ", rv); 
+    write("    bv: ", bv); 
+    write("    cv: ", cv); 
+    write("    sv: ", sv);
+    writeln(""); 
+end; 
 
 begin 
     iv := 5; 
@@ -21,19 +40,20 @@ begin
     sv := "asdf"; 
 
     // writeln(); // this is not allowed because we can not use printf(); 
-    writeln(ic); 
-    writeln(rc); 
-    writeln(bc); 
-    writeln(cc); 
-    writeln(iv); 
-    writeln(rv); 
-    writeln(bv); 
-    writeln(cv); 
-    writeln(sv);
-    writeln("qwer"); 
+    writeln("ic: ", ic); 
+    writeln("rc: ", rc); 
+    writeln("bc: ", bc); 
+    writeln("cc: ", cc); 
+    writeln(""); 
 
-    sv := "zxcv"; 
-    writeln(sv); 
+    printAll; 
+
+    read(iv); 
+    read(rv); 
+    read(bv); 
+    read(cv); 
+
+    printAll; 
 
 end 
 . 

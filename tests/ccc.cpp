@@ -3,8 +3,10 @@
 #include <iostream> 
 
 int main() {
-    std::string s("asdf"); 
-    printf(""); 
+    char* cptr = "asdf"; 
+    scanf("%s", cptr); 
+
+    printf("%s", cptr); 
 
     return 0; 
 }
