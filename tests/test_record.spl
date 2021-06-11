@@ -1,0 +1,22 @@
+program test_record;
+
+var
+    a,b : record
+            year: 1990..1999;
+            month: 1..12;
+            day: integer;
+        end;
+
+begin
+    a.year := 1990;
+    a.month := 8;
+    a.day := 19;
+    b.year := 1999;
+    b.month := 3;
+    b.day := 18;
+    writeln(a.year);
+    if (a.year > b.year) then
+    writeln("a is older than b.");
+    writeln("a.month is larger than b.month is ", (a.month>b.month));
+    writeln("a.day is smaller than b.day is ", (a.day<b.day));
+end.

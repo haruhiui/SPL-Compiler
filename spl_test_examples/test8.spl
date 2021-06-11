@@ -1,7 +1,16 @@
 program h;
-var a : string;
+var a,d : integer;
+    b : integer;
+    c : real;
+    e : real;
 begin
-    read(a);
-    writeln(a);
+   a := -338;
+   b := -2;
+   c := 4;
+   d := sqr(b);
+   e := 7.2;
+   writeln(d);
+   c := sqr(e);
+   writeln(c);
 end
 .

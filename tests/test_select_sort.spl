@@ -1,0 +1,19 @@
+program test_select_sort;
+
+var
+    a : array[1..10] of integer;
+    i,j,t : integer;
+
+begin
+    writeln("Input 10 integers: ");
+    for i := 1 to 10 do read(a[i]);
+    for i := 1 to 9 do
+        begin
+            for j := i+1 to 10 do
+                if a[i]<a[j] then
+                    begin
+                        t := a[i]; a[i] := a[j]; a[j] := t;
+                    end;
+            writeln(a[i]);
+        end;
+end.

@@ -28,18 +28,18 @@
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/DynamicLibrary.h>
 #include <llvm/Target/TargetMachine.h>
-#include "llvm/ADT/APFloat.h"
-#include "llvm/ADT/Optional.h"
-#include "llvm/ADT/STLExtras.h"
-#include "llvm/IR/Constants.h"
-#include "llvm/IR/DerivedTypes.h"
-#include "llvm/IR/Instructions.h"
-#include "llvm/IR/Type.h"
-#include "llvm/IR/Verifier.h"
-#include "llvm/Support/FileSystem.h"
-#include "llvm/Support/Host.h" 
-#include "llvm/Support/TargetRegistry.h"
-#include "llvm/Target/TargetOptions.h"
+#include <llvm/ADT/APFloat.h>
+#include <llvm/ADT/Optional.h>
+#include <llvm/ADT/STLExtras.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/IR/Type.h>
+#include <llvm/IR/Verifier.h>
+#include <llvm/Support/FileSystem.h>
+#include <llvm/Support/Host.h> 
+#include <llvm/Support/TargetRegistry.h>
+#include <llvm/Target/TargetOptions.h>
 
 static std::unique_ptr<llvm::LLVMContext> TheContext = std::make_unique<llvm::LLVMContext>();
 static llvm::IRBuilder<> TheBuilder(*TheContext);
@@ -54,34 +54,33 @@ public:
     llvm::BasicBlock* labelBlock[10000];
     std::map<std::string, AstArrayType*> arrayMap;
     llvm::Function *printf, *scanf;
-    
+    llvm::Function *abs, *chr, *odd, *ord, *pred, 
+                   *sqr, *sqrt, *succ, *sqrReal;
+  
+
     Generator() {
-        // TheModule = std::make_unique<llvm::Module>("main", *TheContext); 
         TheModule = std::unique_ptr<llvm::Module>(new llvm::Module("main", *TheContext));
         TheAddrSpace = TheModule->getDataLayout().getAllocaAddrSpace();
     }
     
     void generate(Program& parseTreeRoot);
-    // llvm::GenericValue run();
-    // llvm::ExecutionEngine* genExeEngine();
     
     llvm::Value* findValue(const std::string & name) {
-        llvm::Value * result = nullptr;
+        llvm::Value *value = nullptr; 
+
         for (auto it = funcStack.rbegin(); it != funcStack.rend(); it++) {
-
-            if ((result = (*it)->getValueSymbolTable()->lookup(name)) != nullptr) {
-                // std::cout << "Find " << name << " in " << std::string((*it)->getName()) << std::endl;
-                return result;
-            } else {
-                // std::cout << "Not Find " << name << " in " << std::string((*it)->getName()) << std::endl;
-            }
+            value = (*it)->getValueSymbolTable()->lookup(name); 
+            if (value != nullptr) {
+                return value; 
+            } 
         }
-        if ((result = TheModule->getGlobalVariable(name)) == nullptr) {
-            throw std::logic_error("[ERROR] Undeclared variable: " + name);
+        
+        value = TheModule->getGlobalVariable(name); 
+        if (value == nullptr) {
+            throw std::logic_error("[ERROR] Undeclared variable: " + name); 
         }
 
-        // std::cout << "Find " << name << " in global" << std::endl;
-        return result;
+        return value; 
     }
     
     llvm::Function* getCurFunction() {
@@ -106,9 +105,124 @@ public:
     }
     
     llvm::Function* createScanf() {
-        auto scanf_type = llvm::FunctionType::get(TheBuilder.getInt32Ty(), true);
-        auto func = llvm::Function::Create(scanf_type, llvm::Function::ExternalLinkage, llvm::Twine("scanf"), TheModule.get());
+        auto scanfType = llvm::FunctionType::get(TheBuilder.getInt32Ty(), true);
+        auto func = llvm::Function::Create(scanfType, llvm::Function::ExternalLinkage, llvm::Twine("scanf"), TheModule.get());
         func->setCallingConv(llvm::CallingConv::C);
+        return func;
+    }
+
+    llvm::Function* createAbs() {
+        auto returnType = TheBuilder.getInt32Ty();
+        llvm::SmallVector<llvm::Type *, 1> funcArgs;
+        funcArgs.push_back(TheBuilder.getInt32Ty());
+        auto funcType = llvm::FunctionType::get(returnType, funcArgs, false);
+        auto func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "abs", TheModule.get());
+        func->setCallingConv(llvm::CallingConv::C);
+        return func;
+    }
+
+    llvm::Function* createChr() {
+        auto returnType = TheBuilder.getInt8Ty();
+        llvm::SmallVector<llvm::Type *, 1> funcArgs;
+        funcArgs.push_back(TheBuilder.getInt32Ty());
+        auto funcType = llvm::FunctionType::get(returnType, funcArgs, false);
+        auto func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "chr", TheModule.get());
+        func->setCallingConv(llvm::CallingConv::C);
+        return func;
+    }
+
+    llvm::Function* createOdd() {
+        auto returnType = TheBuilder.getInt32Ty();
+        llvm::SmallVector<llvm::Type *, 1> funcArgs;
+        funcArgs.push_back(TheBuilder.getInt32Ty());
+        auto funcType = llvm::FunctionType::get(returnType, funcArgs, false);
+        auto func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "odd", TheModule.get());
+        func->setCallingConv(llvm::CallingConv::C);
+        return func;
+    }
+
+    llvm::Function* createOrd() {
+        auto returnType = TheBuilder.getInt32Ty();
+        llvm::SmallVector<llvm::Type *, 1> funcArgs;
+        funcArgs.push_back(TheBuilder.getInt32Ty());
+        auto funcType = llvm::FunctionType::get(returnType, funcArgs, false);
+        auto func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "ord", TheModule.get());
+        func->setCallingConv(llvm::CallingConv::C);
+        return func;
+    }
+
+    llvm::Function* createPred() {
+        auto returnType = TheBuilder.getInt32Ty();
+        llvm::SmallVector<llvm::Type *, 1> funcArgs;
+        funcArgs.push_back(TheBuilder.getInt32Ty());
+        auto funcType = llvm::FunctionType::get(returnType, funcArgs, false);
+        auto func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "pred", TheModule.get());
+        func->setCallingConv(llvm::CallingConv::C);
+        return func;
+    }
+
+    llvm::Function* createSqr() {
+        auto returnType = TheBuilder.getInt32Ty();  
+        llvm::SmallVector<llvm::Type *, 1> funcArgs;
+        funcArgs.push_back(TheBuilder.getInt32Ty());
+        auto funcType = llvm::FunctionType::get(returnType, funcArgs, false);
+        auto func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "sqr", TheModule.get());
+        func->setCallingConv(llvm::CallingConv::C);
+
+        auto argsIter = func->arg_begin();
+        llvm::Value *arg1 = argsIter++;
+        arg1->setName("tmpa");
+        llvm::BasicBlock *entrySqr = llvm::BasicBlock::Create(*TheContext, "entrypoint", func);
+        llvm::IRBuilder<> builderSqr(entrySqr);
+        llvm::Value* result = builderSqr.CreateMul(arg1,arg1,"multmpi");
+        builderSqr.CreateRet(result);
+        return func;
+    }
+
+    llvm::Function* createSqrReal() {
+        auto returnType = TheBuilder.getDoubleTy(); 
+        llvm::SmallVector<llvm::Type *, 1> funcArgs;
+        funcArgs.push_back(TheBuilder.getDoubleTy()); 
+        auto funcType = llvm::FunctionType::get(returnType, funcArgs, false);
+        auto func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "sqrr", TheModule.get());
+        func->setCallingConv(llvm::CallingConv::C);
+
+        auto argsIter = func->arg_begin();
+        llvm::Value *arg1 = argsIter++;
+        arg1->setName("tmpa");
+        llvm::BasicBlock *entrySqrr = llvm::BasicBlock::Create(*TheContext, "entrypoint", func);
+        llvm::IRBuilder<> builderSqrr(entrySqrr);
+        llvm::Value* result = builderSqrr.CreateFMul(arg1,arg1,"multmpr");
+        builderSqrr.CreateRet(result);
+        return func;
+    }
+
+    llvm::Function* createSqrt() {
+        auto returnType = TheBuilder.getDoubleTy();
+        llvm::SmallVector<llvm::Type *, 1> funcArgs;
+        funcArgs.push_back(TheBuilder.getDoubleTy());
+        auto funcType = llvm::FunctionType::get(returnType, funcArgs, false);
+        auto func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "sqrt", TheModule.get());
+        func->setCallingConv(llvm::CallingConv::C);
+        return func;
+    }
+
+    llvm::Function* createSucc() {
+        auto returnType = TheBuilder.getInt32Ty();
+        llvm::SmallVector<llvm::Type *, 1> funcArgs;
+        funcArgs.push_back(TheBuilder.getInt32Ty());
+        auto funcType = llvm::FunctionType::get(returnType, funcArgs, false);
+        auto func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "succ", TheModule.get());
+        func->setCallingConv(llvm::CallingConv::C);
+
+        auto argsIter = func->arg_begin();
+        llvm::Value *arg1 = argsIter++;
+        arg1->setName("tmpa");
+        llvm::BasicBlock *entrySqr = llvm::BasicBlock::Create(*TheContext, "entrypoint", func);
+        llvm::IRBuilder<> builderSucc(entrySqr);
+        llvm::Value* result = builderSucc.CreateAdd(arg1,builderSucc.getInt32(1),"succ");
+        builderSucc.CreateRet(result);
+
         return func;
     }
 };

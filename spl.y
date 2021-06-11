@@ -5,12 +5,9 @@
 
 using namespace std;
 
-void yyerror(const char *s) { 
-	std::printf("Error: %s\n", s);
-	std::exit(1); 
-}
-
 int yylex(void);
+
+void yyerror(const char *s); 
 
 Program *root;
 %}
@@ -699,11 +696,11 @@ factor
 	}
 	| SYS_FUNCT
 	{ 
-		$$ = new SysFunctionCall($1); 
+		$$ = new SysFunctionCall(*$1); 
 	}
 	| SYS_FUNCT LP args_list RP
 	{ 
-		$$ = new SysFunctionCall($1, $3); 
+		$$ = new SysFunctionCall(*$1, $3); 
 	}
 	| const_value
 	{ 

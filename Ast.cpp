@@ -3,38 +3,9 @@
 
 using namespace std;
 
-void LOG_I(const string & msg)
+void echoInfo( const char* file,int line, const string & msg)
 {
-    // cout << "[INFO] " << msg << endl;
-}
-
-void printType(llvm::Value* v)
-{
-    if (v->getType()->isIntegerTy())
-    {
-        cout << "int " << v->getType()->getIntegerBitWidth() << endl;
-    }
-    else if (v->getType()->isFloatTy())
-    {
-        cout << "float" << endl;
-    }
-    else if (v->getType()->isDoubleTy())
-    {
-        cout << "double" << endl;
-    }
-    else
-    {
-        cout << "unknown" << endl;
-    }
-}
-
-template <typename T>
-void printT(T* vt)
-{
-    string str;
-    llvm::raw_string_ostream stream(str);
-    vt->print(stream);
-    cout << str << endl;
+    cout << "[FILE] "<< file << " [LINE NUM] " << line << " [INFO] " << msg  << endl;
 }
 
 llvm::AllocaInst *CreateEntryBlockAlloca(llvm::Function *TheFunction, llvm::StringRef VarName, llvm::Type* type)
@@ -83,10 +54,7 @@ llvm::Type* AstType::toLLVMType()
                 return TheBuilder.getInt8Ty();
             } else if (buildInType == "boolean") {
                 return TheBuilder.getInt1Ty();
-            } else if (buildInType == "string") {
-                // I want to beat cby up
-                // case SPL_STRING: return TheBuilder.getInt8Ty();
-                // well you can just give it try ;)
+            } else if (buildInType == "string") { 
                 return TheBuilder.getInt8PtrTy();
             }
             break;
@@ -223,40 +191,40 @@ llvm::Value *BinaryOp(llvm::Value *L, string op, llvm::Value *R)
 }
 
 llvm::Value *Identifier::codeGen(Generator & generator) {
-    LOG_I("Idnetifier");
+    echoInfo(__FILE__,__LINE__,"Identifier");
 //    return TheBuilder.CreateLoad(generator.findValue(*(this->name)), *(this->name));
     return new llvm::LoadInst(generator.findValue(*(this->name)), "tmp", false, TheBuilder.GetInsertBlock());
 }
 
 llvm::Value *Integer::codeGen(Generator & generator) {
-    LOG_I("Integer");
+    echoInfo(__FILE__,__LINE__,"Integer");
     return TheBuilder.getInt32(this->value);
 }
 
 llvm::Value *Char::codeGen(Generator & generator) {
-    LOG_I("Char");
+    echoInfo(__FILE__,__LINE__,"Char");
     return TheBuilder.getInt8(this->value);
 }
 
 llvm::Value *String::codeGen(Generator & generator) {
-    LOG_I("String");
+    echoInfo(__FILE__,__LINE__,"String");
     // Found on Stackoverflow
     return TheBuilder.CreateGlobalStringPtr(llvm::StringRef(this->value->c_str()));
 }
 
 llvm::Value *Real::codeGen(Generator & generator) {
-    LOG_I("Real");
+    echoInfo(__FILE__,__LINE__,"Real");
 //    return llvm::ConstantFP::get(*TheContext, llvm::APFloat(this->value));
     return llvm::ConstantFP::get(TheBuilder.getDoubleTy(), this->value);
 }
 
 llvm::Value *Boolean::codeGen(Generator & generator) {
-    LOG_I("Boolean");
+    echoInfo(__FILE__,__LINE__,"Boolean");
     return TheBuilder.getInt1(this->value);
 }
 
 llvm::Value *ConstDeclaration::codeGen(Generator & generator) {
-    LOG_I("Const Declaration");
+    echoInfo(__FILE__,__LINE__,"Const Declaration");
     string name = this->name->getName();
     this->type = new AstType(this->value->valueType);
     if (this->isGlobal()) {
@@ -268,14 +236,13 @@ llvm::Value *ConstDeclaration::codeGen(Generator & generator) {
 }
 
 llvm::Value *TypeDeclaration::codeGen(Generator & generator) {
-    LOG_I("Type Declaration");
+    echoInfo(__FILE__,__LINE__,"Type Declaration");
     return nullptr;
 }
 
 llvm::Value *AstType::codeGen(Generator & generator) {
-    LOG_I("Type");
-    switch (this->type)
-    {
+    echoInfo(__FILE__,__LINE__,"Type");
+    switch (this->type) {
         case SPL_ARRAY: 		this->arrayType->codeGen(generator); break;
         case SPL_CONST_RANGE: 	this->constRangeType->codeGen(generator); break;
         case SPL_ENUM_RANGE: 	this->enumRangeType->codeGen(generator); break;
@@ -289,18 +256,18 @@ llvm::Value *AstType::codeGen(Generator & generator) {
 }
 
 llvm::Value *EnumType::codeGen(Generator & generator) {
-    LOG_I("Enum Type");
+    echoInfo(__FILE__,__LINE__,"Enum Type");
     // TODO
     return nullptr;
 }
 
 llvm::Value *AstArrayType::codeGen(Generator & generator) {
-    LOG_I("Array Type");
+    echoInfo(__FILE__,__LINE__,"Array Type");
     return this->range->codeGen(generator);
 }
 
 llvm::Value *RecordType::codeGen(Generator & generator) {
-    LOG_I("Record Type");
+    echoInfo(__FILE__,__LINE__,"Record Type");
     return nullptr;
 }
 
@@ -309,7 +276,7 @@ llvm::Value *ConstRangeType::mapIndex(llvm::Value *indexValue, Generator & gener
 }
 
 llvm::Value *ConstRangeType::codeGen(Generator & generator) {
-    LOG_I("Const Range Type");
+    echoInfo(__FILE__,__LINE__,"Const Range Type");
     this->size();
     return nullptr;
 }
@@ -340,7 +307,7 @@ size_t EnumRangeType::size() {
 }
 
 llvm::Value *EnumRangeType::codeGen(Generator & generator) {
-    LOG_I("Enum Range Type");
+    echoInfo(__FILE__,__LINE__,"Enum Range Type");
     this->upValue = this->upBound->codeGen(generator);
     this->lowValue = this->lowBound->codeGen(generator);
     this->upValueAddr = generator.findValue(this->upBound->getName());
@@ -350,12 +317,12 @@ llvm::Value *EnumRangeType::codeGen(Generator & generator) {
 }
 
 llvm::Value *FieldDeclaration::codeGen(Generator & generator) {
-    LOG_I("Field Declaration");
+    echoInfo(__FILE__,__LINE__,"Field Declaration");
     return nullptr;
 }
 
 llvm::Value *VarDeclaration::codeGen(Generator & generator) {
-    LOG_I("Var Declaration");
+    echoInfo(__FILE__,__LINE__,"Var Declaration");
     llvm::Value* alloc = nullptr;
     llvm::Type* varType;
     for (auto & id : *(this->nameList)) {
@@ -373,7 +340,7 @@ llvm::Value *VarDeclaration::codeGen(Generator & generator) {
 }
 
 llvm::Value *FuncDeclaration::codeGen(Generator & generator) {
-    LOG_I("Function Declaration");
+    echoInfo(__FILE__,__LINE__,"Function Declaration");
     //Prototype
     vector<llvm::Type*> argTypes;
     for (auto & argType : *(this->paraList)) {
@@ -434,13 +401,13 @@ llvm::Value *FuncDeclaration::codeGen(Generator & generator) {
 }
 
 llvm::Value *Parameter::codeGen(Generator & generator) {
-    LOG_I("Parameter");
+    echoInfo(__FILE__,__LINE__,"Parameter");
     //Not need
     return nullptr;
 }
 
 llvm::Value *Routine::codeGen(Generator & generator) {
-    LOG_I("Routine");
+    echoInfo(__FILE__,__LINE__,"Routine");
     llvm::Value* res = nullptr;
     
     //Const declareation part
@@ -470,21 +437,31 @@ llvm::Value *Routine::codeGen(Generator & generator) {
 }
 
 llvm::Value *Program::codeGen(Generator & generator) {
-    LOG_I("Program");
+
+    echoInfo(__FILE__,__LINE__,"Program");
     //Main function prototype
     vector<llvm::Type*> argTypes;
     llvm::FunctionType * funcType = llvm::FunctionType::get(TheBuilder.getVoidTy(), makeArrayRef(argTypes), false);
-    // generator.mainFunction = llvm::Function::Create(funcType, 
-    //     llvm::GlobalValue::InternalLinkage, "main", generator.TheModule.get());
     generator.mainFunction = llvm::Function::Create(funcType, 
         llvm::GlobalValue::ExternalLinkage, "main", generator.TheModule.get());
-    llvm::BasicBlock * basicBlock = llvm::BasicBlock::Create(*TheContext, "entrypoint", generator.mainFunction, 0);
+    llvm::BasicBlock * mainEntry = llvm::BasicBlock::Create(*TheContext, "entrypoint", generator.mainFunction, 0);
     
     generator.pushFunction(generator.mainFunction);
-    TheBuilder.SetInsertPoint(basicBlock);
+    TheBuilder.SetInsertPoint(mainEntry);
+
     //Create System functions
     generator.printf = generator.createPrintf();
     generator.scanf = generator.createScanf();
+    generator.abs = generator.createAbs();
+    generator.chr = generator.createChr();
+    generator.odd = generator.createOdd();
+    generator.ord = generator.createOrd();
+    generator.pred = generator.createPred();
+    generator.sqr = generator.createSqr();
+    generator.sqrt = generator.createSqrt();
+    generator.succ = generator.createSucc();
+    generator.sqrReal = generator.createSqrReal(); 
+
     //Code generate
     this->routine->setGlobal();
     this->routine->codeGen(generator);
@@ -495,7 +472,7 @@ llvm::Value *Program::codeGen(Generator & generator) {
 }
 
 llvm::Value *AssignStatement::codeGen(Generator & generator) {
-    LOG_I("Assign Statement");
+    echoInfo(__FILE__,__LINE__,"Assign Statement");
     llvm::Value *res = nullptr;
     this->forward(generator);
     switch (this->type)
@@ -509,7 +486,7 @@ llvm::Value *AssignStatement::codeGen(Generator & generator) {
 }
 
 llvm::Value *BinaryExpression::codeGen(Generator & generator) {
-    LOG_I("Binary Expression");
+    echoInfo(__FILE__,__LINE__,"Binary Expression");
     llvm::Value* L = this->lhs->codeGen(generator);
     llvm::Value* R = this->rhs->codeGen(generator);
     if (!L || !R) return nullptr;
@@ -518,12 +495,11 @@ llvm::Value *BinaryExpression::codeGen(Generator & generator) {
 }
 
 llvm::Value *ArrayReference::codeGen(Generator & generator) {
-    LOG_I("Array Reference");
+    echoInfo(__FILE__,__LINE__,"Array Reference");
     return TheBuilder.CreateLoad(this->getReference(generator), "arrRef");
 }
 
-llvm::Value *ArrayReference::getReference(Generator & generator)
-{
+llvm::Value *ArrayReference::getReference(Generator & generator) {
     string name = this->array->getName();
     llvm::Value* arrayValue = generator.findValue(name), *indexValue;
     if (generator.arrayMap[name]->range->type == AstType::SPL_CONST_RANGE)
@@ -541,12 +517,12 @@ llvm::Value *ArrayReference::getReference(Generator & generator)
 }
 
 llvm::Value *RecordReference::codeGen(Generator & generator) {
-    LOG_I("Record Reference");
+    echoInfo(__FILE__,__LINE__,"Record Reference");
     return nullptr;
 }
 
 llvm::Value *FunctionCall::codeGen(Generator & generator) {
-    LOG_I("Function Call");
+    echoInfo(__FILE__,__LINE__,"Function Call");
     this->forward(generator);
     llvm::Function *function = generator.TheModule->getFunction(this->function->getName());
     if (function == nullptr)
@@ -576,12 +552,12 @@ llvm::Value *FunctionCall::codeGen(Generator & generator) {
 }
 
 llvm::Value *ProcedureCall::codeGen(Generator & generator) {
-    LOG_I("Procedure Call");
+    echoInfo(__FILE__, __LINE__, "Procedure Call");
     this->forward(generator);
-    llvm::Function *function = generator.TheModule->getFunction(this->function->getName());
+    llvm::Function *function = generator.TheModule->getFunction(this->funcName->getName());
     if (function == nullptr)
     {
-        throw domain_error("[ERROR] Function not defined: " + this->function->getName());
+        throw domain_error("[ERROR] Function not defined: " + this->funcName->getName());
     }
     vector<llvm::Value*> args;
     llvm::Function::arg_iterator argIt =  function->arg_begin();
@@ -600,19 +576,119 @@ llvm::Value *ProcedureCall::codeGen(Generator & generator) {
         }
         argIt++;
     }
-    // llvm::Value* res = TheBuilder.CreateCall(function, args, "calltmp"); 
     // procedure must return a value if we use the last sentence, but procedure must not return anything in SPL. 
     llvm::Value* res = TheBuilder.CreateCall(function, args);
-    this->backward(generator);
+    this->backward(generator); 
     return res;
 }
 
 llvm::Value *SysFunctionCall::codeGen(Generator & generator) {
-    LOG_I("System Function Call");
+    echoInfo(__FILE__,__LINE__,"System Function Call");
+
+    llvm::Value *res = nullptr;
     this->forward(generator);
-    //TODO::Code gen
+    if (this->funcName == "abs") {
+        res = this->SysFuncAbs(generator);
+    } else if (this->funcName == "chr") {
+        res = this->SysFuncChr(generator);
+    } else if (this->funcName == "odd") {
+        res = this->SysFuncOdd(generator);
+    } else if (this->funcName == "ord") {
+        res = this->SysFuncOrd(generator);
+    } else if (this->funcName == "pred") {
+        res = this->SysFuncPred(generator);
+    } else if (this->funcName == "sqr") {
+        res = this->SysFuncSqr(generator);
+    } else if (this->funcName == "sqrt") {
+        res = this->SysFuncSqrt(generator);
+    } else if (this->funcName == "succ") {
+        res = this->SysFuncSucc(generator);
+    } else {
+        throw domain_error("[ERROR] Unknown System Function");
+    }
     this->backward(generator);
-    return nullptr;
+    return res;
+}
+
+llvm::Value *SysFunctionCall::SysFuncAbs(Generator & generator) {
+    vector<llvm::Value*> params;
+    auto arg = this->args->front();
+    llvm::Value *argValue;
+    argValue = arg->codeGen(generator);
+    params.push_back(argValue);
+    return TheBuilder.CreateCall(generator.abs, params, "abs");
+}
+
+llvm::Value *SysFunctionCall::SysFuncChr(Generator & generator) {
+    vector<llvm::Value*> params;
+    auto arg = this->args->front();
+    llvm::Value *argValue;
+    argValue = arg->codeGen(generator);
+    params.push_back(argValue);
+    return TheBuilder.CreateCall(generator.chr, params, "chr");
+}
+
+llvm::Value *SysFunctionCall::SysFuncOdd(Generator & generator) {
+    vector<llvm::Value*> params;
+    auto arg = this->args->front();
+    llvm::Value *argValue;
+    //Just common variable
+    argValue = arg->codeGen(generator);
+    params.push_back(argValue);
+    return TheBuilder.CreateCall(generator.odd, params, "odd");
+}
+
+llvm::Value *SysFunctionCall::SysFuncOrd(Generator & generator) {
+    vector<llvm::Value*> params;
+    auto arg = this->args->front();
+    llvm::Value *argValue;
+    //Just common variable
+    argValue = arg->codeGen(generator);
+    params.push_back(argValue);
+    return TheBuilder.CreateCall(generator.ord, params, "ord");
+}
+
+llvm::Value *SysFunctionCall::SysFuncPred(Generator & generator) {
+    vector<llvm::Value*> params;
+    auto arg = this->args->front();
+    llvm::Value *argValue;
+    argValue = arg->codeGen(generator);
+    params.push_back(argValue);
+    return TheBuilder.CreateCall(generator.pred, params, "pred");
+}
+
+llvm::Value *SysFunctionCall::SysFuncSqr(Generator & generator) {
+    vector<llvm::Value*> params;
+    auto arg = this->args->front();
+    llvm::Value *argValue;
+    argValue = arg->codeGen(generator);
+    params.push_back(argValue);
+    if (argValue->getType() == TheBuilder.getDoubleTy()){
+        return TheBuilder.CreateCall(generator.sqrReal, params, "sqrr");
+    } else {
+        return TheBuilder.CreateCall(generator.sqr, params, "sqr");
+    }
+    
+}
+
+
+llvm::Value *SysFunctionCall::SysFuncSqrt(Generator & generator) {
+    vector<llvm::Value*> params;
+    auto arg = this->args->front();
+    llvm::Value  *argValue;
+    //Just common variable
+    argValue = arg->codeGen(generator);
+    params.push_back(argValue);
+    return TheBuilder.CreateCall(generator.sqrt, params, "sqrt");
+}
+
+llvm::Value *SysFunctionCall::SysFuncSucc(Generator & generator) {
+    vector<llvm::Value*> params;
+    auto arg = this->args->front();
+    llvm::Value *argValue;
+    argValue = arg->codeGen(generator);
+    params.push_back(argValue);
+    return TheBuilder.CreateCall(generator.succ, params, "succ");
 }
 
 llvm::Value *SysProcedureCall::SysProcWrite(Generator & generator, bool isLineBreak)
@@ -658,7 +734,6 @@ llvm::Value *SysProcedureCall::SysProcWrite(Generator & generator, bool isLineBr
     auto zero = llvm::Constant::getNullValue(TheBuilder.getInt32Ty());
     llvm::Constant* indices[] = {zero, zero};
     auto varRef = llvm::ConstantExpr::getGetElementPtr(formatStrVar->getType()->getElementType(), formatStrVar, indices);
-//    auto varRef
     params.insert(params.begin(), varRef);
     return TheBuilder.CreateCall(generator.printf, llvm::makeArrayRef(params), "printf");
 }
@@ -703,7 +778,7 @@ llvm::Value *SysProcedureCall::SysProcRead(Generator & generator)
 }
 
 llvm::Value *SysProcedureCall::codeGen(Generator & generator) {
-    LOG_I("System Procedure Call");
+    echoInfo(__FILE__,__LINE__,"System Procedure Call");
     llvm::Value *res = nullptr;
     this->forward(generator);
     switch (this->procedure) {
@@ -717,7 +792,7 @@ llvm::Value *SysProcedureCall::codeGen(Generator & generator) {
 }
 
 llvm::Value *IfStatement::codeGen(Generator & generator) {
-    LOG_I("If Statement");
+    echoInfo(__FILE__,__LINE__,"If Statement");
     this->forward(generator);
     
     llvm::Value *condValue = this->condition->codeGen(generator), *thenValue = nullptr, *elseValue = nullptr;
@@ -736,10 +811,6 @@ llvm::Value *IfStatement::codeGen(Generator & generator) {
     thenBB = TheBuilder.GetInsertBlock();
 
     //Else
-//    if (TheFunction != generator.mainFunction)
-//    {
-//        TheFunction->getBasicBlockList().push_back(elseBB);
-//    }
     TheBuilder.SetInsertPoint(elseBB);
     if (this->elseStatement != nullptr)
     {
@@ -749,10 +820,6 @@ llvm::Value *IfStatement::codeGen(Generator & generator) {
     elseBB = TheBuilder.GetInsertBlock();
 
     //Merge
-//    if (TheFunction != generator.mainFunction)
-//    {
-//        TheFunction->getBasicBlockList().push_back(mergeBB);
-//    }
     TheBuilder.SetInsertPoint(mergeBB);
     
     this->backward(generator);
@@ -760,7 +827,7 @@ llvm::Value *IfStatement::codeGen(Generator & generator) {
 }
 
 llvm::Value *RepeatStatement::codeGen(Generator & generator) {
-    LOG_I("Repeate Statement");
+    echoInfo(__FILE__,__LINE__,"Repeate Statement");
     this->forward(generator);
     
     llvm::Function *TheFunction = generator.getCurFunction();
@@ -791,9 +858,9 @@ llvm::Value *RepeatStatement::codeGen(Generator & generator) {
 }
 
 llvm::Value *WhileStatement::codeGen(Generator & generator) {
-    LOG_I("While Statement");
+    echoInfo(__FILE__,__LINE__,"While Statement");
     this->forward(generator);
-    llvm::Function *TheFunction = generator.getCurFunction();
+    auto *TheFunction = generator.getCurFunction();
     llvm::BasicBlock *condBB = llvm::BasicBlock::Create(*TheContext, "cond", TheFunction);
     llvm::BasicBlock *loopBB = llvm::BasicBlock::Create(*TheContext, "loop", TheFunction);
     llvm::BasicBlock *afterBB = llvm::BasicBlock::Create(*TheContext, "afterLoop", TheFunction);
@@ -818,7 +885,7 @@ llvm::Value *WhileStatement::codeGen(Generator & generator) {
 }
 
 llvm::Value *ForStatement::codeGen(Generator & generator) {
-    LOG_I("For Statement");
+    echoInfo(__FILE__,__LINE__,"For Statement");
     this->forward(generator);
     //Init
     llvm::Function *TheFunction = generator.getCurFunction();
@@ -863,7 +930,7 @@ llvm::Value *ForStatement::codeGen(Generator & generator) {
 }
 
 llvm::Value *CaseStatement::codeGen(Generator & generator) {
-    LOG_I("Case Statement");
+    echoInfo(__FILE__,__LINE__,"Case Statement");
     this->forward(generator);
     
     llvm::Value *cmpValue = this->value->codeGen(generator), *condValue = nullptr;
@@ -898,7 +965,7 @@ llvm::Value *CaseStatement::codeGen(Generator & generator) {
 }
 
 llvm::Value *CaseExpression::codeGen(Generator & generator) {
-    LOG_I("Case Expression");
+    echoInfo(__FILE__,__LINE__,"Case Expression");
     return this->stmt->codeGen(generator);
 }
 
@@ -927,7 +994,7 @@ void Statement::backward(Generator & generator)
 }
 
 llvm::Value *GotoStatement::codeGen(Generator & generator) {
-    LOG_I("Goto Statement");
+    echoInfo(__FILE__,__LINE__,"Goto Statement");
     this->forward(generator);
     llvm::Value *res = nullptr;
     if (generator.labelBlock[this->toLabel] == nullptr) {
@@ -944,7 +1011,7 @@ llvm::Value *GotoStatement::codeGen(Generator & generator) {
 }
 
 llvm::Value *CompoundStatement::codeGen(Generator & generator) {
-    LOG_I("CompoundStatement");
+    echoInfo(__FILE__,__LINE__,"CompoundStatement");
     this->forward(generator);
     llvm::Value *lastValue = nullptr;
     for (auto & stmt : *(this->stmtList)) {
@@ -1230,7 +1297,7 @@ string FunctionCall::getJson() {
 
 string ProcedureCall::getJson() {
     vector<string> children;
-    children.push_back(function->getJson());
+    children.push_back(funcName->getJson());
     vector<string> argsJson;
     for(auto &arg : *args) {
         argsJson.push_back(arg->getJson());
@@ -1240,8 +1307,9 @@ string ProcedureCall::getJson() {
 }
 
 string SysFunctionCall::getJson() {
+    // cout << (this->funcName) << endl;
     vector<string> children;
-    children.push_back(jsonfy("SysFunction", jsonfy(*name)));
+    children.push_back(jsonfy("SysFunction", jsonfy(this->funcName)));
     vector<string> argsJson;
     for(auto &arg : *args) {
         argsJson.push_back(arg->getJson());

@@ -79,10 +79,12 @@ public:
 };
 
 // expression
-class Expression : public Node{};
+class Expression : public Node {
+
+};
 
 // statement
-class Statement : public Node{
+class Statement : public Node {
 private:
     int label = -1;
 
@@ -329,7 +331,7 @@ public:
                 s = upBound->getValue().c - lowBound->getValue().c + 1;
             }
             if (s <= 0) {
-                throw range_error("[ERROR] low bound > up bound.");
+                throw range_error("[ERROR] low > up.");
             }
         } else {
             throw std::domain_error("[ERROR] Invalid range type.");
@@ -388,7 +390,7 @@ public:
 // abstract type
 class AstType : public Statement {
 public:
-    enum TypeOfType {
+    enum AstTypeType {
         SPL_ARRAY,
         SPL_RECORD,
         SPL_ENUM,
@@ -406,7 +408,7 @@ public:
     EnumRangeType *enumRangeType;
     string buildInType;
     Identifier *userDefineType;
-    TypeOfType type;
+    AstTypeType type;
 
     AstType(AstArrayType *at) : arrayType(at), type(SPL_ARRAY) { }
     AstType(RecordType *rt) : recordType(rt), type(SPL_RECORD) { }
@@ -629,12 +631,12 @@ public:
 class ProcedureCall : public Statement 
 {
 private:
-    Identifier *function;
+    Identifier *funcName;
     ArgsList *args;
 
 public:
-    ProcedureCall(Identifier *name) : function(name), args(new ArgsList()) { }
-    ProcedureCall(Identifier *name, ArgsList *args) : function(name), args(args) { }
+    ProcedureCall(Identifier *name) : funcName(name), args(new ArgsList()) { }
+    ProcedureCall(Identifier *name, ArgsList *args) : funcName(name), args(args) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
     virtual string getJson() override;
@@ -643,50 +645,26 @@ public:
 class SysFunctionCall : public Expression, public Statement
 {
 private:
-    enum SysFunction {
-        SPL_ABS, 
-        SPL_CHR, 
-        SPL_ODD, 
-        SPL_ORD, 
-        SPL_PRED, 
-        SPL_SQR, 
-        SPL_SQRT, 
-        SPL_SUCC,
-        SPL_ERROR_FUCNTION
-    };
-
-    SysFunction getFunction(string *name) {
-        string &sname = *name;
-        if(sname == "abs")
-            return SPL_ABS;
-        else if(sname == "chr")
-            return SPL_CHR;
-        else if(sname == "odd")
-            return SPL_ODD;
-        else if(sname == "ord")
-            return SPL_ORD;
-        else if(sname == "pred")
-            return SPL_PRED;
-        else if(sname == "sqr")
-            return SPL_SQR;
-        else if(sname == "sqrt")
-            return SPL_SQRT;
-        else if(sname == "succ")
-            return SPL_SUCC;
-        else
-            return SPL_ERROR_FUCNTION;
-    }
-
-    SysFunction function;
     ArgsList *args;
-    string *name;
+    string funcName;
 
 public:
-    SysFunctionCall(string *name) : function(getFunction(name)), name(name) { }
-    SysFunctionCall(string *name, ArgsList *args) : function(getFunction(name)), args(args), name(name) { }
+    SysFunctionCall(string name) : funcName(name) { cout << name << endl; }
+    SysFunctionCall(string name, ArgsList *args) : funcName(name), args(args) { cout << name << funcName << endl; }
 
-    virtual llvm::Value *codeGen(Generator & generator) override;
     virtual string getJson() override;
+    virtual llvm::Value *codeGen(Generator & generator) override;
+
+    llvm::Value *SysFuncAbs(Generator & generator);
+    llvm::Value *SysFuncChr(Generator & generator);
+    llvm::Value *SysFuncOdd(Generator & generator);
+    llvm::Value *SysFuncOrd(Generator & generator);
+    llvm::Value *SysFuncPred(Generator & generator);
+    llvm::Value *SysFuncSqr(Generator & generator);
+    llvm::Value *SysFuncSqrt(Generator & generator);
+    llvm::Value *SysFuncSucc(Generator & generator);
+    llvm::Value *SysFuncSqrReal(Generator & generator); 
+
 };
 
 class SysProcedureCall : public Statement 
@@ -734,7 +712,6 @@ class IfStatement : public Statement
 private:
     Expression *condition;
     Statement *thenStatement;
-    // elseStatement can be nullptr 你需要自己检测下是否是空指针
     Statement *elseStatement;
 
 public:

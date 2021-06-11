@@ -1,0 +1,35 @@
+program test_math_func;
+
+var
+    a,b,d,e : integer;
+    r,p : real;
+    letter,ch : char;
+    t,f : boolean;
+
+begin
+    r := abs(-2.3);
+    a := abs(-157);
+    writeln(r," ",a);
+
+    b := sqr(5);
+    p := sqrt(49);
+    writeln(b," ",p);
+
+    letter := chr(65);
+    writeln(letter);
+
+    t := odd(3);
+    f := odd(2);
+    writeln(t," ",f);
+
+    d := ord('a');
+    writeln(d);
+
+    f := pred(true);
+    ch := pred('f');
+    writeln(f," ",ch);
+
+    t := succ(false);
+    e := succ(87);
+    writeln(t," ",e);
+end.

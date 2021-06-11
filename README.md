@@ -46,7 +46,12 @@ python ParseTreeVisualizer.py parseTree.json
 
 [llvm tutorila](https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/index.html) 
 
+[llvm developer reference: include/llvm/IR](https://llvm.org/doxygen/dir_c3e93f23a4a31c717998b98ce143b7c0.html)
+[llvm developer reference: lib/IR](https://llvm.org/doxygen/dir_bfcfa2223a05221bedc89835a6573260.html)
+
 [SPL-Compiler by czyxm](https://github.com/czyxm/SPL-Compiler)
+
+[Example](https://blog.csdn.net/qq_42570601/article/details/108059403)
 
 ## TODO
 
@@ -68,3 +73,8 @@ python ParseTreeVisualizer.py parseTree.json
     * add: string type now available when draw pic, but something wrong with write.
 * 6.2 
     * add: able to write string variable and string constant 
+
+
+## bug fix 
+* test_logical.spl: and、not、or显示错误
+    * 原因在于.y中non_label_stmt中分析时选择了compound_stmt而不是proc_stmt，导致if语句的then后面必须要有begin... end

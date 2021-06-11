@@ -2,7 +2,6 @@
 #include "Ast.hpp" 
 #include "Generator.hpp"
 #include "y.tab.hpp"
-
 extern int yyparse();
 
 // Defined in spl.y
@@ -21,11 +20,14 @@ int main(int argc, char **argv)
     freopen(argv[1],"r",stdin);
 
     yyparse();
-
+    
+    // generate parseTree json for visualization
     ofstream os("parseTree.json");
+
     os << root->getJson() << endl;
 
     Generator generator;
+
     generator.generate(*root);
     
     try {

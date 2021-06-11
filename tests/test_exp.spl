@@ -1,0 +1,35 @@
+program test_exp;
+
+var
+    a,b,c : integer;
+    d,e,f : real;
+    p,q,r : char;
+    t,f :boolean;
+
+begin
+    a := 5;
+    b := 6;
+    c := a*6+b-111;
+    writeln("c = ",c);
+    c := 2*b div a;
+    writeln("c = ",c);
+    c := 3*b % a;
+    writeln("c = ",c);
+    c := 3*b mod a;
+    writeln("c = ",c);
+
+    d := 0.35;
+    e := -5.20;
+    f := d*7.6+e;
+    writeln("f = ",f);
+    f := e/d;
+    writeln("f = ",f);
+
+    p := 'a';
+    q := 'g';
+    writeln("p = ",p);
+
+    t := true;
+    writeln("t = ",t);
+    writeln(a=9);
+end.

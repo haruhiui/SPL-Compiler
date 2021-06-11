@@ -4,11 +4,13 @@
 #include <stdio.h>
 #include <string>
 extern "C" int yywrap() {return 1;}
+int lineno = 0; 
 %}
 
 %%
-\/\/.*\n		{ ; }
-[ \t\n]			{ ; }
+\/\/.*			{ ; }
+[ \t]			{ ; }
+\n				{ lineno++; }
 \'.\' { 
 	yylval.cVal = yytext[1];
 	return CHAR; 
@@ -118,3 +120,8 @@ extern "C" int yywrap() {return 1;}
 }
 
 %%
+
+void yyerror(const char *s) { 
+	std::printf("Error: %s (line: %d)\n", s, lineno);
+	std::exit(1); 
+}
