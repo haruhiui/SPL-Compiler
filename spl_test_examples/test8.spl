@@ -1,16 +1,17 @@
 program h;
-var a,d : integer;
+var a : integer;
     b : integer;
-    c : real;
+    c : integer;
     e : real;
+    d : char;
 begin
-   a := -338;
-   b := -2;
-   c := 4;
-   d := sqr(b);
+   a := -337;
+   b := -1;
+   c := 31;
+   d := chr(c);
    e := 7.2;
    writeln(d);
-   c := sqr(e);
-   writeln(c);
+   e := sqr(e);
+   writeln(e);
 end
 .

@@ -95,18 +95,23 @@ public:
         funcStack.pop_back();
     }
     
+    // call printf : from c lib
     llvm::Function* createPrintf() {
         std::vector<llvm::Type*> arg_types;
         arg_types.push_back(TheBuilder.getInt8PtrTy());
-        auto printf_type = llvm::FunctionType::get(TheBuilder.getInt32Ty(), llvm::makeArrayRef(arg_types), true);
-        auto func = llvm::Function::Create(printf_type, llvm::Function::ExternalLinkage, llvm::Twine("printf"), TheModule.get());
+        auto funcType = llvm::FunctionType::get(TheBuilder.getInt32Ty(), llvm::makeArrayRef(arg_types), true);
+        auto func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "printf", TheModule.get());
         func->setCallingConv(llvm::CallingConv::C);
         return func;
     }
     
+    // call scanf : from c lib
     llvm::Function* createScanf() {
-        auto scanfType = llvm::FunctionType::get(TheBuilder.getInt32Ty(), true);
-        auto func = llvm::Function::Create(scanfType, llvm::Function::ExternalLinkage, llvm::Twine("scanf"), TheModule.get());
+        // auto scanfType = llvm::FunctionType::get(TheBuilder.getInt32Ty(), true);
+        // auto func = llvm::Function::Create(scanfType, llvm::Function::ExternalLinkage, "scanf", TheModule.get());
+        auto returnType = TheBuilder.getInt32Ty();
+        auto funcType = llvm::FunctionType::get(returnType, true);
+        auto func = llvm::Function::Create(funcType,llvm::Function::ExternalLinkage, "scanf", TheModule.get());
         func->setCallingConv(llvm::CallingConv::C);
         return func;
     }
@@ -128,16 +133,38 @@ public:
         auto funcType = llvm::FunctionType::get(returnType, funcArgs, false);
         auto func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "chr", TheModule.get());
         func->setCallingConv(llvm::CallingConv::C);
+        
+        auto argsIter = func->arg_begin();
+        llvm::Value *arg1 = argsIter++;
+        arg1->setName("tmpa");
+        llvm::BasicBlock *entry = llvm::BasicBlock::Create(*TheContext, "entrypoint", func);
+        llvm::IRBuilder<> builder(entry);
+        llvm::Value* result = builder.CreateAnd(arg1,builder.getInt8(0xff),"l8bits");
+
+        builder.CreateRet(result);
+
         return func;
     }
 
+    // judge if an INTEGER is odd or not.
+    // It works uncertainly on real numbers
     llvm::Function* createOdd() {
-        auto returnType = TheBuilder.getInt32Ty();
+        auto returnType = TheBuilder.getInt1Ty();
         llvm::SmallVector<llvm::Type *, 1> funcArgs;
         funcArgs.push_back(TheBuilder.getInt32Ty());
         auto funcType = llvm::FunctionType::get(returnType, funcArgs, false);
         auto func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "odd", TheModule.get());
         func->setCallingConv(llvm::CallingConv::C);
+
+        auto argsIter = func->arg_begin();
+        llvm::Value *arg1 = argsIter++;
+        arg1->setName("tmpa");
+        llvm::BasicBlock *entry = llvm::BasicBlock::Create(*TheContext, "entrypoint", func);
+        llvm::IRBuilder<> builder(entry);
+        llvm::Value* result = builder.CreateAnd(arg1,builder.getInt32(1),"odd");
+        result = builder.CreateICmpEQ(result, builder.getInt32(1), "isodd");
+        builder.CreateRet(result);
+
         return func;
     }
 
@@ -158,6 +185,15 @@ public:
         auto funcType = llvm::FunctionType::get(returnType, funcArgs, false);
         auto func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "pred", TheModule.get());
         func->setCallingConv(llvm::CallingConv::C);
+
+        auto argsIter = func->arg_begin();
+        llvm::Value *arg1 = argsIter++;
+        arg1->setName("tmpa");
+        llvm::BasicBlock *entry = llvm::BasicBlock::Create(*TheContext, "entrypoint", func);
+        llvm::IRBuilder<> builder(entry);
+        llvm::Value* result = builder.CreateSub(arg1,builder.getInt32(1),"succ");
+        builder.CreateRet(result);
+
         return func;
     }
 
@@ -172,10 +208,10 @@ public:
         auto argsIter = func->arg_begin();
         llvm::Value *arg1 = argsIter++;
         arg1->setName("tmpa");
-        llvm::BasicBlock *entrySqr = llvm::BasicBlock::Create(*TheContext, "entrypoint", func);
-        llvm::IRBuilder<> builderSqr(entrySqr);
-        llvm::Value* result = builderSqr.CreateMul(arg1,arg1,"multmpi");
-        builderSqr.CreateRet(result);
+        llvm::BasicBlock *entry = llvm::BasicBlock::Create(*TheContext, "entrypoint", func);
+        llvm::IRBuilder<> builder(entry);
+        llvm::Value* result = builder.CreateMul(arg1,arg1,"multmpi");
+        builder.CreateRet(result);
         return func;
     }
 
@@ -190,10 +226,10 @@ public:
         auto argsIter = func->arg_begin();
         llvm::Value *arg1 = argsIter++;
         arg1->setName("tmpa");
-        llvm::BasicBlock *entrySqrr = llvm::BasicBlock::Create(*TheContext, "entrypoint", func);
-        llvm::IRBuilder<> builderSqrr(entrySqrr);
-        llvm::Value* result = builderSqrr.CreateFMul(arg1,arg1,"multmpr");
-        builderSqrr.CreateRet(result);
+        llvm::BasicBlock *entry = llvm::BasicBlock::Create(*TheContext, "entrypoint", func);
+        llvm::IRBuilder<> builder(entry);
+        llvm::Value* result = builder.CreateFMul(arg1,arg1,"multmpr");
+        builder.CreateRet(result);
         return func;
     }
 
@@ -218,10 +254,10 @@ public:
         auto argsIter = func->arg_begin();
         llvm::Value *arg1 = argsIter++;
         arg1->setName("tmpa");
-        llvm::BasicBlock *entrySqr = llvm::BasicBlock::Create(*TheContext, "entrypoint", func);
-        llvm::IRBuilder<> builderSucc(entrySqr);
-        llvm::Value* result = builderSucc.CreateAdd(arg1,builderSucc.getInt32(1),"succ");
-        builderSucc.CreateRet(result);
+        llvm::BasicBlock *entry = llvm::BasicBlock::Create(*TheContext, "entrypoint", func);
+        llvm::IRBuilder<> builder(entry);
+        llvm::Value* result = builder.CreateAdd(arg1,builder.getInt32(1),"succ");
+        builder.CreateRet(result);
 
         return func;
     }
