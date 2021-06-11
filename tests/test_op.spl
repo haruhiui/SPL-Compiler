@@ -1,8 +1,20 @@
 program test_op; 
 const
-    iv = 2;
-    rv = 2.0; 
+    ic = 2;
+    rc = 2.0; 
+var 
+    iv : integer; 
+    rv1 : real; 
+    rv2 : real; 
+    rv3 : real; 
+
 begin 
-    writeln(3 mod 2); 
+    // iv := 234; 
+    // rv1 := 432.1234; 
+    // rv2 := 123.0; 
+    rv3 := 12; 
+
+    writeln; 
+
 end
 . 

@@ -88,3 +88,6 @@ if (((m mod 2) = 0) and ((n mod 2) = 0) or ((m mod 2) = 1) and ((n mod 2) = 1)) 
 else
     writeln("one of m and n is odd while the other is even"); 
 ```
+
+* fix: div for float, including float div float, float div int, int div float 
+    * Ast.cpp: 166, if one of the para is int, convert it to float 

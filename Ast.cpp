@@ -164,7 +164,24 @@ llvm::Value *BinaryOp(llvm::Value *L, string op, llvm::Value *R)
     } else if (op == "*") {
         return flag ? TheBuilder.CreateFMul(L, R, "multmpf") : TheBuilder.CreateMul(L, R, "multmpi");
     } else if (op == "/") {
-        return TheBuilder.CreateSDiv(L, R, "tmpDiv");
+        if (!flag) {
+            return TheBuilder.CreateSDiv(L, R, "divtmpi"); 
+        } else {
+            if (L->getType()->isIntegerTy()) {
+                if (llvm::ConstantInt* CI = llvm::dyn_cast<llvm::ConstantInt>(L)) {
+                    int constIntValue = CI->getSExtValue(); 
+                    L = llvm::ConstantFP::get(TheBuilder.getDoubleTy(), (double)constIntValue); 
+                    return TheBuilder.CreateFDiv(L, R, "divf");  
+                }
+            } else if (R->getType()->isIntegerTy()) {
+                if (llvm::ConstantInt* CI = llvm::dyn_cast<llvm::ConstantInt>(R)) {
+                    int constIntValue = CI->getSExtValue(); 
+                    R = llvm::ConstantFP::get(TheBuilder.getDoubleTy(), (double)constIntValue); 
+                    return TheBuilder.CreateFDiv(L, R, "divf"); 
+                }
+            } 
+        }
+        return TheBuilder.CreateFDiv(L, R, "divf"); 
     } else if (op == ">=") {
         return TheBuilder.CreateICmpSGE(L, R, "tmpSGE");
     } else if (op == ">") {
@@ -477,9 +494,18 @@ llvm::Value *AssignStatement::codeGen(Generator & generator) {
     this->forward(generator);
     switch (this->type)
     {
-        case ID_ASSIGN: res = TheBuilder.CreateStore(this->rhs->codeGen(generator), generator.findValue(this->lhs->getName())); break;
-        case ARRAY_ASSIGN: res = TheBuilder.CreateStore(this->rhs->codeGen(generator), (new ArrayReference(this->lhs, this->sub))->getReference(generator)); break;
-        case RECORD_ASSIGN: res = nullptr; 
+        case ID_ASSIGN: {
+            llvm::Value *rhsValue = this->rhs->codeGen(generator); 
+            llvm::Value *lhsValue = generator.findValue(this->lhs->getName()); 
+            res = TheBuilder.CreateStore(rhsValue, lhsValue); 
+            break;
+        }
+        case ARRAY_ASSIGN: 
+            res = TheBuilder.CreateStore(this->rhs->codeGen(generator), (new ArrayReference(this->lhs, this->sub))->getReference(generator)); 
+            break;
+        case RECORD_ASSIGN: 
+            res = nullptr; 
+            break; 
     }
     this->backward(generator);
     return res;
