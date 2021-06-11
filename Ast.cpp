@@ -941,6 +941,7 @@ llvm::Value *CaseStatement::codeGen(Generator & generator) {
         switchBBs.push_back(llvm::BasicBlock::Create(*TheContext, "switch", TheFunction));
         caseBBs.push_back(llvm::BasicBlock::Create(*TheContext, "case", TheFunction));
     }
+    
     TheBuilder.CreateBr(switchBBs[0]);
     for (int i = 0; i < this->caseExprList->size(); i++){
         //Switch

@@ -740,7 +740,7 @@ args_list
 	;
 
 if_stmt 
-	: IF expression THEN stmt else_clause
+	: IF expression THEN stmt else_clause 
 	{ 
 		$$ = new IfStatement($2, $4, $5); 
 	}
@@ -810,7 +810,7 @@ case_expr_list
 	;
 
 case_expr 
-	: const_value COLON stmt SEMI
+	: const_value COLON stmt SEMI 
 	{ 
 		$$ = new CaseExpression($1, $3); 
 	}

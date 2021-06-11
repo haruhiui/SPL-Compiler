@@ -76,5 +76,15 @@ python ParseTreeVisualizer.py parseTree.json
 
 
 ## bug fix 
-* test_logical.spl: and、not、or显示错误
-    * 原因在于.y中non_label_stmt中分析时选择了compound_stmt而不是proc_stmt，导致if语句的then后面必须要有begin... end
+
+* test_logical.spl: and、not、or 显示错误
+    * 原文件中在 if 后面需要加 begin... end，或者将 if 后面的语句的分号去掉才能正常运行，否则会 syntax error 
+    * stmt 后面不能加分号，而 stmt_list 才表示用分号区分开的语句组
+
+```
+// 原文件
+if (((m mod 2) = 0) and ((n mod 2) = 0) or ((m mod 2) = 1) and ((n mod 2) = 1)) then 
+    writeln("m and n are both even number or odd number", m); 
+else
+    writeln("one of m and n is odd while the other is even"); 
+```

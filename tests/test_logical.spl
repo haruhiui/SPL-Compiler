@@ -4,12 +4,11 @@ var
     a : boolean;
 begin
     m := 6;
-    n := 8;
+    n := 7;
     if (((m mod 2) = 0) and ((n mod 2) = 0) or ((m mod 2) = 1) and ((n mod 2) = 1)) then 
-        // writeln("m and n are both even number or odd number", m);
-        write(m); 
+        writeln("m and n are both even number or odd number", m) 
     else
-        writeln("one of m and n is odd while the other is even");
+        writeln("one of m and n is odd while the other is even"); 
     a := not (m=6);
     writeln(a);
     a := not (m>3);

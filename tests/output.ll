@@ -16,7 +16,7 @@ target triple = "x86_64-pc-linux-gnu"
 define void @main() {
 entrypoint:
   store i32 6, i32* @m
-  store i32 8, i32* @n
+  store i32 7, i32* @n
   %tmp = load i32, i32* @m
   %tmpSREM = srem i32 %tmp, 2
   %tmpEQ = icmp eq i32 %tmpSREM, 0
