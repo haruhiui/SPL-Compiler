@@ -51,7 +51,7 @@ public:
     unsigned int TheAddrSpace;
     llvm::Function *mainFunction;
     std::vector<llvm::Function*> funcStack;
-    llvm::BasicBlock* labelBlock[10000];
+    llvm::BasicBlock* labelBlock[3000];
     std::map<std::string, AstArrayType*> arrayMap;
     llvm::Function *printf, *scanf;
     llvm::Function *abs, *chr, *odd, *ord, *pred, 
@@ -253,43 +253,43 @@ public:
         func->setCallingConv(llvm::CallingConv::C);
         auto argsIter = func->arg_begin();
         llvm::Value *result = argsIter++;
-        result->setName("res");
-        llvm::BasicBlock *entry = llvm::BasicBlock::Create(*TheContext, "entrypoint", func);
+        llvm::BasicBlock *entry = llvm::BasicBlock::Create(*TheContext, "startSqrt", func);
         llvm::IRBuilder<> builder(entry);
 
 
-        auto resAddr = builder.CreateAlloca(builder.getDoubleTy(),nullptr,"resAddr");
+        auto resAddr = builder.CreateAlloca(builder.getDoubleTy());
         builder.CreateStore(result, resAddr);
         auto epsilon = llvm::ConstantFP::get(builder.getDoubleTy(), 0.0000000000001);
-        auto c = builder.CreateLoad(resAddr, "c");
-        auto *condBB = llvm::BasicBlock::Create(*TheContext, "cond", func);
-        auto *loopBB = llvm::BasicBlock::Create(*TheContext, "loop", func);
-        auto *afterBB = llvm::BasicBlock::Create(*TheContext, "afterLoop", func);
+        auto c = builder.CreateLoad(resAddr);
+        auto *condBB = llvm::BasicBlock::Create(*TheContext, "condSqrt", func);
+        auto *loopBB = llvm::BasicBlock::Create(*TheContext, "loopSqrt", func);
+        auto *afterBB = llvm::BasicBlock::Create(*TheContext, "afterLoopSqrt", func);
         
         //Cond
         builder.CreateBr(condBB);
         builder.SetInsertPoint(condBB);
-        result = builder.CreateLoad(resAddr,"res");
-        auto delta = builder.CreateFMul(result, epsilon, "delta");
+        result = builder.CreateLoad(resAddr);
+        auto delta = builder.CreateFMul(result, epsilon);
 
-        auto div = builder.CreateFDiv(c, result, "cdivt");
-        auto diff1 = builder.CreateFSub(result,div,"diff1");
-        auto diff2 = builder.CreateFSub(div, result, "diff2");
-        auto cmp1 = builder.CreateFCmpOGT(diff1, delta, "cmp1");
-        auto cmp2 = builder.CreateFCmpOGT(diff2, delta, "cmp2");
-        auto cmp = builder.CreateOr(cmp1, cmp2, "any");
+        auto div = builder.CreateFDiv(c, result);
+        auto diff1 = builder.CreateFSub(result,div);
+        auto diff2 = builder.CreateFSub(div, result);
+        auto cmp1 = builder.CreateFCmpOGT(diff1, delta);
+        auto cmp2 = builder.CreateFCmpOGT(diff2, delta);
+        auto cmp = builder.CreateOr(cmp1, cmp2);
         builder.CreateCondBr(cmp, loopBB, afterBB);
         condBB = builder.GetInsertBlock();
 
         //Loop
         builder.SetInsertPoint(loopBB);
-        auto add = builder.CreateFAdd(div, result, "add");
-        result = builder.CreateFDiv(add, llvm::ConstantFP::get(builder.getDoubleTy(), 2.0), "newres");
+        auto add = builder.CreateFAdd(div, result);
+        result = builder.CreateFDiv(add, llvm::ConstantFP::get(builder.getDoubleTy(), 2.0));
         builder.CreateStore(result, resAddr);
         builder.CreateBr(condBB);
 
         //After
         builder.SetInsertPoint(afterBB);
+        result = builder.CreateLoad(resAddr);
         builder.CreateRet(result);
         return func;
     }

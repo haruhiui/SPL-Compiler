@@ -1,11 +1,15 @@
 program h;
-var a : integer;
-    e : real;
-    d : char;
+var
+    a,b,c,d,e,f : integer;
 begin
-    e := 2.0;
-    e := sqrt(e);
-    writeln(e);
-  
+
+1 : a := 5;
+    b := 6;
+    goto 2;
+    c := 7;
+2 : d := 8;
+    e := 9;
+    writeln(c);
+    goto 1;
 end
 .

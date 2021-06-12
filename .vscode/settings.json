@@ -10,6 +10,21 @@
         "list": "cpp",
         "vector": "cpp",
         "string_view": "cpp",
-        "stdexcept": "cpp"
+        "stdexcept": "cpp",
+        "chrono": "cpp",
+        "unordered_map": "cpp",
+        "algorithm": "cpp",
+        "optional": "cpp",
+        "tuple": "cpp",
+        "fstream": "cpp",
+        "iosfwd": "cpp",
+        "mutex": "cpp",
+        "shared_mutex": "cpp",
+        "streambuf": "cpp",
+        "thread": "cpp",
+        "cmath": "cpp",
+        "utility": "cpp",
+        "iterator": "cpp",
+        "memory_resource": "cpp"
     }
 }

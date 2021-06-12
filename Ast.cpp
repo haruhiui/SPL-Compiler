@@ -491,7 +491,7 @@ llvm::Value *Program::codeGen(Generator & generator) {
 llvm::Value *AssignStatement::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Assign Statement");
     llvm::Value *res = nullptr;
-    this->forward(generator);
+    this->generatePrologue(generator);
     switch (this->type)
     {
         case ID_ASSIGN: {
@@ -507,7 +507,7 @@ llvm::Value *AssignStatement::codeGen(Generator & generator) {
             res = nullptr; 
             break; 
     }
-    this->backward(generator);
+    this->generateEpilogue(generator);
     return res;
 }
 
@@ -549,7 +549,7 @@ llvm::Value *RecordReference::codeGen(Generator & generator) {
 
 llvm::Value *FunctionCall::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Function Call");
-    this->forward(generator);
+    this->generatePrologue(generator);
     llvm::Function *function = generator.TheModule->getFunction(this->function->getName());
     if (function == nullptr)
     {
@@ -573,13 +573,13 @@ llvm::Value *FunctionCall::codeGen(Generator & generator) {
         argIt++;
     }
     llvm::Value *res = TheBuilder.CreateCall(function, args, "calltmp");
-    this->backward(generator);
+    this->generateEpilogue(generator);
     return res;
 }
 
 llvm::Value *ProcedureCall::codeGen(Generator & generator) {
     echoInfo(__FILE__, __LINE__, "Procedure Call");
-    this->forward(generator);
+    this->generatePrologue(generator);
     llvm::Function *function = generator.TheModule->getFunction(this->funcName->getName());
     if (function == nullptr)
     {
@@ -604,7 +604,7 @@ llvm::Value *ProcedureCall::codeGen(Generator & generator) {
     }
     // procedure must return a value if we use the last sentence, but procedure must not return anything in SPL. 
     llvm::Value* res = TheBuilder.CreateCall(function, args);
-    this->backward(generator); 
+    this->generateEpilogue(generator); 
     return res;
 }
 
@@ -612,7 +612,7 @@ llvm::Value *SysFunctionCall::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"System Function Call");
 
     llvm::Value *res = nullptr;
-    this->forward(generator);
+    this->generatePrologue(generator);
     if (this->funcName == "abs") {
         res = this->SysFuncAbs(generator);
     } else if (this->funcName == "chr") {
@@ -632,7 +632,7 @@ llvm::Value *SysFunctionCall::codeGen(Generator & generator) {
     } else {
         throw domain_error("[ERROR] Unknown System Function");
     }
-    this->backward(generator);
+    this->generateEpilogue(generator);
     return res;
 }
 
@@ -806,20 +806,20 @@ llvm::Value *SysProcedureCall::SysProcRead(Generator & generator)
 llvm::Value *SysProcedureCall::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"System Procedure Call");
     llvm::Value *res = nullptr;
-    this->forward(generator);
+    this->generatePrologue(generator);
     switch (this->procedure) {
         case SPL_READ: res = this->SysProcRead(generator); break;
         case SPL_WRITE: res = this->SysProcWrite(generator, false); break;
         case SPL_WRITELN: res = this->SysProcWrite(generator, true); break;
         case SPL_ERROR_PROCEDURE: throw domain_error("[ERROR] Unknown System Procedure");
     }
-    this->backward(generator);
+    this->generateEpilogue(generator);
     return res;
 }
 
 llvm::Value *IfStatement::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"If Statement");
-    this->forward(generator);
+    this->generatePrologue(generator);
     
     llvm::Value *condValue = this->condition->codeGen(generator), *thenValue = nullptr, *elseValue = nullptr;
     condValue = TheBuilder.CreateICmpNE(condValue, llvm::ConstantInt::get(llvm::Type::getInt1Ty(*TheContext), 0, true), "ifCond");
@@ -848,13 +848,13 @@ llvm::Value *IfStatement::codeGen(Generator & generator) {
     //Merge
     TheBuilder.SetInsertPoint(mergeBB);
     
-    this->backward(generator);
+    this->generateEpilogue(generator);
     return branch;
 }
 
 llvm::Value *RepeatStatement::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Repeate Statement");
-    this->forward(generator);
+    this->generatePrologue(generator);
     
     llvm::Function *TheFunction = generator.getCurFunction();
     llvm::BasicBlock *condBB = llvm::BasicBlock::Create(*TheContext, "cond", TheFunction);
@@ -879,13 +879,13 @@ llvm::Value *RepeatStatement::codeGen(Generator & generator) {
     
     //After
     TheBuilder.SetInsertPoint(afterBB);
-    this->backward(generator);
+    this->generateEpilogue(generator);
     return branch;
 }
 
 llvm::Value *WhileStatement::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"While Statement");
-    this->forward(generator);
+    this->generatePrologue(generator);
     auto *TheFunction = generator.getCurFunction();
     llvm::BasicBlock *condBB = llvm::BasicBlock::Create(*TheContext, "cond", TheFunction);
     llvm::BasicBlock *loopBB = llvm::BasicBlock::Create(*TheContext, "loop", TheFunction);
@@ -906,13 +906,13 @@ llvm::Value *WhileStatement::codeGen(Generator & generator) {
     
     //After
     TheBuilder.SetInsertPoint(afterBB);
-    this->backward(generator);
+    this->generateEpilogue(generator);
     return branch;
 }
 
 llvm::Value *ForStatement::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"For Statement");
-    this->forward(generator);
+    this->generatePrologue(generator);
     //Init
     llvm::Function *TheFunction = generator.getCurFunction();
     llvm::Value* startValue = this->value->codeGen(generator);
@@ -951,13 +951,13 @@ llvm::Value *ForStatement::codeGen(Generator & generator) {
     
     //After
     TheBuilder.SetInsertPoint(afterBB);
-    this->backward(generator);
+    this->generateEpilogue(generator);
     return branch;
 }
 
 llvm::Value *CaseStatement::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Case Statement");
-    this->forward(generator);
+    this->generatePrologue(generator);
     
     llvm::Value *cmpValue = this->value->codeGen(generator), *condValue = nullptr;
     llvm::Function *TheFunction = generator.getCurFunction();
@@ -987,7 +987,7 @@ llvm::Value *CaseStatement::codeGen(Generator & generator) {
     
     //After
     TheBuilder.SetInsertPoint(afterBB);
-    this->backward(generator);
+    this->generateEpilogue(generator);
     return nullptr;
 }
 
@@ -996,9 +996,11 @@ llvm::Value *CaseExpression::codeGen(Generator & generator) {
     return this->stmt->codeGen(generator);
 }
 
-void Statement::forward(Generator & generator) {
+void Statement::generatePrologue(Generator & generator) {
     llvm::Function *TheFunction = generator.getCurFunction();
-    if (this->label >= 0) {
+    cout << "generatePrologue: curlabel = " << this->label << endl;
+    if (this->label >= 0)
+    {
         if (generator.labelBlock[this->label] == nullptr) {
             generator.labelBlock[this->label] = llvm::BasicBlock::Create(*TheContext, "Label_" + to_string(label), TheFunction);
         }
@@ -1010,8 +1012,10 @@ void Statement::forward(Generator & generator) {
     }
 }
 
-void Statement::backward(Generator & generator)
+void Statement::generateEpilogue(Generator & generator)
 {
+    cout << "generateEpilogue: curlabel = " << this->label << endl;
+    // return;
     if (this->label >= 0 && afterBB != nullptr)
     {
         TheBuilder.SetInsertPoint(generator.labelBlock[this->label]);
@@ -1022,7 +1026,7 @@ void Statement::backward(Generator & generator)
 
 llvm::Value *GotoStatement::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Goto Statement");
-    this->forward(generator);
+    this->generatePrologue(generator);
     llvm::Value *res = nullptr;
     if (generator.labelBlock[this->toLabel] == nullptr) {
         generator.labelBlock[this->toLabel] = llvm::BasicBlock::Create(*TheContext, "Label_" + to_string(this->toLabel), generator.getCurFunction());
@@ -1033,18 +1037,18 @@ llvm::Value *GotoStatement::codeGen(Generator & generator) {
 //        this->afterBB = llvm::BasicBlock::Create(*TheContext, "afterLabel_" + to_string(this->toLabel), generator.getCurFunction());
 //    }
 //    TheBuilder.SetInsertPoint(this->afterBB);
-    this->backward(generator);
+    this->generateEpilogue(generator);
     return res;
 }
 
 llvm::Value *CompoundStatement::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"CompoundStatement");
-    this->forward(generator);
+    this->generatePrologue(generator);
     llvm::Value *lastValue = nullptr;
     for (auto & stmt : *(this->stmtList)) {
         lastValue = stmt->codeGen(generator);
     }
-    this->backward(generator);
+    this->generateEpilogue(generator);
     return lastValue;
 }
 

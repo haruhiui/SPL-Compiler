@@ -85,20 +85,20 @@ class Expression : public Node {
 
 // statement
 class Statement : public Node {
-private:
-    int label = -1;
-
 public:
     llvm::BasicBlock *afterBB;
+    int label = -1;
 
-    // set label for goto
-    void setLabel(int label) {
-        this->label = label;
-    }
+    // set label for goto.
+    // Note that label is set only when user defined.
+    void setLabel(int label) { this->label = label;}
 
-    void forward(Generator & generator);
-    
-    void backward(Generator & generator);
+    // only labelled statement will actually do these
+    // Prologue will generate br label %xx and %xx:
+    void generatePrologue(Generator & generator);
+
+    // Epilogue will generate %nextxx and br %nextxx
+    void generateEpilogue(Generator & generator);
 };
 
 // identifier
@@ -227,7 +227,6 @@ public:
     }
     
     virtual ConstValue *operator-() override {
-        // return new Char(-value);
         return nullptr;
     }
 
@@ -791,7 +790,6 @@ public:
 class CaseExpression : public Statement 
 {
 private:
-    // 可以与CaseStatement中的变量建立EQUAL的BinaryStatment进行条件判断
     Statement *stmt;
 
 public:
@@ -804,10 +802,8 @@ public:
 
 class GotoStatement : public Statement 
 {
-private:
-    int toLabel;
-
 public:
+    int toLabel;
     GotoStatement(int label) : toLabel(label) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
