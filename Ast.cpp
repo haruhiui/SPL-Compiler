@@ -156,52 +156,53 @@ llvm::Constant* AstType::initValue(ConstValue *v)
 
 llvm::Value *BinaryOp(llvm::Value *L, string op, llvm::Value *R)
 {
+    // ori: multi tmps 
     bool flag = L->getType()->isDoubleTy() || R->getType()->isDoubleTy();
     if (op == "+") {
-        return flag ? TheBuilder.CreateFAdd(L, R, "addtmpf") : TheBuilder.CreateAdd(L, R, "addtmpi");
+        return flag ? TheBuilder.CreateFAdd(L, R) : TheBuilder.CreateAdd(L, R);
     } else if (op == "-") {
-        return flag ? TheBuilder.CreateFSub(L, R, "subtmpf") : TheBuilder.CreateSub(L, R, "subtmpi");
+        return flag ? TheBuilder.CreateFSub(L, R) : TheBuilder.CreateSub(L, R);
     } else if (op == "*") {
-        return flag ? TheBuilder.CreateFMul(L, R, "multmpf") : TheBuilder.CreateMul(L, R, "multmpi");
+        return flag ? TheBuilder.CreateFMul(L, R) : TheBuilder.CreateMul(L, R);
     } else if (op == "/") {
         if (!flag) {
-            return TheBuilder.CreateSDiv(L, R, "divtmpi"); 
+            return TheBuilder.CreateSDiv(L, R); 
         } else {
             if (L->getType()->isIntegerTy()) {
                 if (llvm::ConstantInt* CI = llvm::dyn_cast<llvm::ConstantInt>(L)) {
                     int constIntValue = CI->getSExtValue(); 
                     L = llvm::ConstantFP::get(TheBuilder.getDoubleTy(), (double)constIntValue); 
-                    return TheBuilder.CreateFDiv(L, R, "divf");  
+                    return TheBuilder.CreateFDiv(L, R);  
                 }
             } else if (R->getType()->isIntegerTy()) {
                 if (llvm::ConstantInt* CI = llvm::dyn_cast<llvm::ConstantInt>(R)) {
                     int constIntValue = CI->getSExtValue(); 
                     R = llvm::ConstantFP::get(TheBuilder.getDoubleTy(), (double)constIntValue); 
-                    return TheBuilder.CreateFDiv(L, R, "divf"); 
+                    return TheBuilder.CreateFDiv(L, R); 
                 }
             } 
         }
-        return TheBuilder.CreateFDiv(L, R, "divf"); 
+        return TheBuilder.CreateFDiv(L, R); 
     } else if (op == ">=") {
-        return TheBuilder.CreateICmpSGE(L, R, "tmpSGE");
+        return TheBuilder.CreateICmpSGE(L, R);
     } else if (op == ">") {
-        return TheBuilder.CreateICmpSGT(L, R, "tmpSGT");
+        return TheBuilder.CreateICmpSGT(L, R);
     } else if (op == "<") {
-        return TheBuilder.CreateICmpSLT(L, R, "tmpSLT");
+        return TheBuilder.CreateICmpSLT(L, R);
     } else if (op == "<=") {
-        return TheBuilder.CreateICmpSLE(L, R, "tmpSLE");
+        return TheBuilder.CreateICmpSLE(L, R);
     } else if (op == "=") {
-        return TheBuilder.CreateICmpEQ(L, R, "tmpEQ");
+        return TheBuilder.CreateICmpEQ(L, R);
     } else if (op == "<>") {
-        return TheBuilder.CreateICmpNE(L, R, "tmpNE");
+        return TheBuilder.CreateICmpNE(L, R);
     } else if (op == "or") {
-        return TheBuilder.CreateOr(L, R, "tmpOR");
+        return TheBuilder.CreateOr(L, R);
     } else if (op == "mod") {
-        return TheBuilder.CreateSRem(L, R, "tmpSREM");
+        return TheBuilder.CreateSRem(L, R);
     } else if (op == "and") {
-        return TheBuilder.CreateAnd(L, R, "tmpAND");
+        return TheBuilder.CreateAnd(L, R);
     } else if (op == "xor") {
-        return TheBuilder.CreateXor(L, R, "tmpXOR");
+        return TheBuilder.CreateXor(L, R);
     } else {
         return nullptr;
     }
@@ -572,7 +573,7 @@ llvm::Value *FunctionCall::codeGen(Generator & generator) {
         }
         argIt++;
     }
-    llvm::Value *res = TheBuilder.CreateCall(function, args, "calltmp");
+    llvm::Value *res = TheBuilder.CreateCall(function, args);   // ori: "calltmp"
     this->generateEpilogue(generator);
     return res;
 }

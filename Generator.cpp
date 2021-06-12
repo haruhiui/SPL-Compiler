@@ -40,25 +40,21 @@ void Generator::generate(Program& parseTreeRoot)
 
     TheModule->setDataLayout(TheTargetMachine->createDataLayout());
 
-    auto Filename = "output.o";
-    std::error_code EC;
-    llvm::raw_fd_ostream dest(Filename, EC, llvm::sys::fs::OF_None);
-
-    if (EC) {
-        llvm::errs() << "Could not open file: " << EC.message();
+    auto filename = "output.o";
+    std::error_code ec;
+    llvm::raw_fd_ostream dest(filename, ec, llvm::sys::fs::OF_None);
+    if (ec) {
+        llvm::errs() << "Could not open file: " << ec.message();
         return ;
     }
-
     llvm::legacy::PassManager pass;
     auto FileType = llvm::CGFT_ObjectFile;
-
     if (TheTargetMachine->addPassesToEmitFile(pass, dest, nullptr, FileType)) {
         llvm::errs() << "TheTargetMachine can't emit a file of this type";
         return ;
     }
-
-    pass.run(*TheModule);
-    dest.flush();
+    // pass.run(*TheModule);
+    // dest.flush();
 
     auto filename2 = "output.ll"; 
     std::error_code ec2; 
@@ -70,7 +66,7 @@ void Generator::generate(Program& parseTreeRoot)
     TheModule->print(dest2, nullptr); 
     dest2.flush(); 
 
-    llvm::outs() << "[+] Wrote object file: output.o, and llvm IR file: output.ll" << "\n"; 
+    llvm::outs() << "[+] Wrote llvm IR file: output.ll" << "\n"; 
     llvm::outs() << "[*] You can run by 'lli output.ll' directly." << "\n"; 
     // stackoverflow is a good thing. 
 }

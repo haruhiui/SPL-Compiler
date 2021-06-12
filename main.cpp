@@ -31,6 +31,7 @@ int main(int argc, char **argv)
     generator.generate(*root);
     
     try {
+        system("llc -filetype=obj output.ll"); 
         system("clang output.o");
         cout << "[+] Successfully generate a.out from '"<< argv[1] <<"', now you can directly run ./a.out" << endl;
     } catch (exception e){
