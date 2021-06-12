@@ -125,7 +125,7 @@ public:
         func->setCallingConv(llvm::CallingConv::C);
         return func;
     }
-
+    // convert integer to char: truncate the integer to 8 bits
     llvm::Function* createChr() {
         auto returnType = TheBuilder.getInt8Ty();
         llvm::SmallVector<llvm::Type *, 1> funcArgs;
@@ -139,7 +139,7 @@ public:
         arg1->setName("tmpa");
         llvm::BasicBlock *entry = llvm::BasicBlock::Create(*TheContext, "entrypoint", func);
         llvm::IRBuilder<> builder(entry);
-        llvm::Value* result = builder.CreateAnd(arg1,builder.getInt8(0xff),"l8bits");
+        llvm::Value *result = builder.CreateTrunc(arg1, builder.getInt8Ty(), "l8bits");
 
         builder.CreateRet(result);
 
@@ -168,16 +168,27 @@ public:
         return func;
     }
 
+    // convert char to integer : zero-extend it to 32bits
     llvm::Function* createOrd() {
         auto returnType = TheBuilder.getInt32Ty();
         llvm::SmallVector<llvm::Type *, 1> funcArgs;
-        funcArgs.push_back(TheBuilder.getInt32Ty());
+        funcArgs.push_back(TheBuilder.getInt8Ty());
         auto funcType = llvm::FunctionType::get(returnType, funcArgs, false);
         auto func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "ord", TheModule.get());
         func->setCallingConv(llvm::CallingConv::C);
+
+        auto argsIter = func->arg_begin();
+        llvm::Value *arg1 = argsIter++;
+        arg1->setName("tmpa");
+        llvm::BasicBlock *entry = llvm::BasicBlock::Create(*TheContext, "entrypoint", func);
+        llvm::IRBuilder<> builder(entry);
+        llvm::Value *result = builder.CreateZExt(arg1, builder.getInt32Ty(), "to32bits");
+        builder.CreateRet(result);
+        
         return func;
     }
 
+    // get a-1 (int)
     llvm::Function* createPred() {
         auto returnType = TheBuilder.getInt32Ty();
         llvm::SmallVector<llvm::Type *, 1> funcArgs;

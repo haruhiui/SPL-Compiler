@@ -649,8 +649,8 @@ private:
     string funcName;
 
 public:
-    SysFunctionCall(string name) : funcName(name) { cout << name << endl; }
-    SysFunctionCall(string name, ArgsList *args) : funcName(name), args(args) { cout << name << funcName << endl; }
+    SysFunctionCall(string name) : funcName(name) {}
+    SysFunctionCall(string name, ArgsList *args) : funcName(name), args(args) {  }
 
     virtual string getJson() override;
     virtual llvm::Value *codeGen(Generator & generator) override;

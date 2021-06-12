@@ -12,9 +12,9 @@ begin
     // iv := 234; 
     // rv1 := 432.1234; 
     // rv2 := 123.0; 
-    rv3 := 12; 
+    rv3 := 12.0; 
 
-    writeln; 
+    writeln(rv3); 
 
 end
 . 

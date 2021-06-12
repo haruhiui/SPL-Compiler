@@ -7,11 +7,9 @@ var a : integer;
 begin
    a := -337;
    b := -1;
-   c := 31;
-   d := chr(c);
-   e := 7.2;
-   writeln(d);
-   e := sqr(e);
-   writeln(e);
+   c := 22;
+   d := 'C';
+   c := ord(d);
+   writeln(c);
 end
 .

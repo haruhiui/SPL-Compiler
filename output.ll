@@ -8,25 +8,19 @@ target triple = "x86_64-pc-linux-gnu"
 @c = global i32 0
 @e = global double 0.000000e+00
 @d = global i8 0
-@.str = constant [4 x i8] c"%c\0A\00"
-@.str.1 = constant [5 x i8] c"%lf\0A\00"
+@.str = constant [4 x i8] c"%d\0A\00"
 
 define void @main() {
 entrypoint:
   store i32 -337, i32* @a
   store i32 -1, i32* @b
-  store i32 31, i32* @c
-  %tmp = load i32, i32* @c
-  %chr = call i8 @chr(i32 %tmp)
-  store i8 %chr, i8* @d
-  store double 7.200000e+00, double* @e
-  %tmp1 = load i8, i8* @d
-  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i32 0, i32 0), i8 %tmp1)
-  %tmp2 = load double, double* @e
-  %sqrr = call double @sqrr(double %tmp2)
-  store double %sqrr, double* @e
-  %tmp3 = load double, double* @e
-  %printf4 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.str.1, i32 0, i32 0), double %tmp3)
+  store i32 22, i32* @c
+  store i8 67, i8* @d
+  %tmp = load i8, i8* @d
+  %ord = call i32 @ord(i8 %tmp)
+  store i32 %ord, i32* @c
+  %tmp1 = load i32, i32* @c
+  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i32 0, i32 0), i32 %tmp1)
   ret void
 }
 
@@ -38,7 +32,8 @@ declare i32 @abs(i32)
 
 define i8 @chr(i32 %tmpa) {
 entrypoint:
-  ret i32 %tmpa
+  %l8bits = trunc i32 %tmpa to i8
+  ret i8 %l8bits
 }
 
 define i1 @odd(i32 %tmpa) {
@@ -48,7 +43,11 @@ entrypoint:
   ret i1 %isodd
 }
 
-declare i32 @ord(i32)
+define i32 @ord(i8 %tmpa) {
+entrypoint:
+  %to32bits = zext i8 %tmpa to i32
+  ret i32 %to32bits
+}
 
 define i32 @pred(i32 %tmpa) {
 entrypoint:

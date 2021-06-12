@@ -9,21 +9,13 @@ target triple = "x86_64-pc-linux-gnu"
 @rv1 = global double 0.000000e+00
 @rv2 = global double 0.000000e+00
 @rv3 = global double 0.000000e+00
-@.str = constant [4 x i8] c"%d\0A\00"
-@.str.1 = constant [5 x i8] c"%lf\0A\00"
-@.str.2 = constant [5 x i8] c"%lf\0A\00"
-@.str.3 = constant [5 x i8] c"%lf\0A\00"
-@.str.4 = constant [5 x i8] c"%lf\0A\00"
+@.str = constant [5 x i8] c"%lf\0A\00"
 
 define void @main() {
 entrypoint:
-  store i32 12, double* @rv3
-  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i32 0, i32 0), i32 2)
-  %printf1 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.str.1, i32 0, i32 0), double 0x40036DB6DB6DB6DB)
-  %printf2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.str.2, i32 0, i32 0), double 2.550000e+00)
-  %printf3 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.str.3, i32 0, i32 0), double 0x40030C30C30C30C3)
+  store double 1.200000e+01, double* @rv3
   %tmp = load double, double* @rv3
-  %printf4 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.str.4, i32 0, i32 0), double %tmp)
+  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.str, i32 0, i32 0), double %tmp)
   ret void
 }
 
