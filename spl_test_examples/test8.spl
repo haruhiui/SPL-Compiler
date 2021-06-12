@@ -1,15 +1,11 @@
 program h;
 var a : integer;
-    b : integer;
-    c : integer;
     e : real;
     d : char;
 begin
-   a := -337;
-   b := -1;
-   c := 22;
-   d := 'C';
-   c := ord(d);
-   writeln(c);
+    e := 2.0;
+    e := sqrt(e);
+    writeln(e);
+  
 end
 .

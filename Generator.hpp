@@ -251,9 +251,50 @@ public:
         auto funcType = llvm::FunctionType::get(returnType, funcArgs, false);
         auto func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "sqrt", TheModule.get());
         func->setCallingConv(llvm::CallingConv::C);
+        auto argsIter = func->arg_begin();
+        llvm::Value *result = argsIter++;
+        result->setName("res");
+        llvm::BasicBlock *entry = llvm::BasicBlock::Create(*TheContext, "entrypoint", func);
+        llvm::IRBuilder<> builder(entry);
+
+
+        auto resAddr = builder.CreateAlloca(builder.getDoubleTy(),nullptr,"resAddr");
+        builder.CreateStore(result, resAddr);
+        auto epsilon = llvm::ConstantFP::get(builder.getDoubleTy(), 0.0000000000001);
+        auto c = builder.CreateLoad(resAddr, "c");
+        auto *condBB = llvm::BasicBlock::Create(*TheContext, "cond", func);
+        auto *loopBB = llvm::BasicBlock::Create(*TheContext, "loop", func);
+        auto *afterBB = llvm::BasicBlock::Create(*TheContext, "afterLoop", func);
+        
+        //Cond
+        builder.CreateBr(condBB);
+        builder.SetInsertPoint(condBB);
+        result = builder.CreateLoad(resAddr,"res");
+        auto delta = builder.CreateFMul(result, epsilon, "delta");
+
+        auto div = builder.CreateFDiv(c, result, "cdivt");
+        auto diff1 = builder.CreateFSub(result,div,"diff1");
+        auto diff2 = builder.CreateFSub(div, result, "diff2");
+        auto cmp1 = builder.CreateFCmpOGT(diff1, delta, "cmp1");
+        auto cmp2 = builder.CreateFCmpOGT(diff2, delta, "cmp2");
+        auto cmp = builder.CreateOr(cmp1, cmp2, "any");
+        builder.CreateCondBr(cmp, loopBB, afterBB);
+        condBB = builder.GetInsertBlock();
+
+        //Loop
+        builder.SetInsertPoint(loopBB);
+        auto add = builder.CreateFAdd(div, result, "add");
+        result = builder.CreateFDiv(add, llvm::ConstantFP::get(builder.getDoubleTy(), 2.0), "newres");
+        builder.CreateStore(result, resAddr);
+        builder.CreateBr(condBB);
+
+        //After
+        builder.SetInsertPoint(afterBB);
+        builder.CreateRet(result);
         return func;
     }
 
+    // get a + 1 (int)
     llvm::Function* createSucc() {
         auto returnType = TheBuilder.getInt32Ty();
         llvm::SmallVector<llvm::Type *, 1> funcArgs;
