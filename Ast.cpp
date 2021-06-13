@@ -29,7 +29,21 @@ llvm::Type* toLLVMPtrType(string type)
     }
     throw logic_error("Undefined type!");
 }
-
+llvm::Type* AstType::getLLVMTypeByString(string& name) {
+    if (name == "integer") {
+        return TheBuilder.getInt32Ty();
+    } else if (name == "real") {
+        return TheBuilder.getDoubleTy();
+    } else if (name == "char") {
+        return TheBuilder.getInt8Ty();
+    } else if (name == "string") {
+        return TheBuilder.getInt8PtrTy();
+    } else if (name == "boolean") {
+        return TheBuilder.getInt1Ty();
+    } else {
+        return nullptr;
+    }
+}
 llvm::Type* AstType::toLLVMType(Generator & generator){
     if (this->type == "array"){
         if (this->arrayType->range->type == "constRange"){
@@ -75,7 +89,8 @@ llvm::Constant* AstType::initValue(Generator & generator,ConstValue *v)
     vector<llvm::Constant*> element;
     llvm::ArrayType* arrayType;
     size_t size = 0;
-    if (v != nullptr){
+    if (v != nullptr)
+    {
         if (this->type == "array") {
             if (this->arrayType->range->type == "constRange") {
                 size = this->arrayType->range->constRangeType->size();
@@ -103,10 +118,14 @@ llvm::Constant* AstType::initValue(Generator & generator,ConstValue *v)
             } else {
                 return nullptr;
             }
+        } else if (this->type == "userDefined"){
+             //cout << this->arrayType->type->buildInType << endl;
         } else {
             return nullptr;
         }
-    } else {
+    }
+    else
+    {
         if (this->type == "array") {
             if (this->arrayType->range->type == "constRange") {
                 size = this->arrayType->range->constRangeType->size();
@@ -132,7 +151,32 @@ llvm::Constant* AstType::initValue(Generator & generator,ConstValue *v)
             } else if (buildInType == "string") {
                 return TheBuilder.getInt8(0);
             }
-        } else {
+        } else if (this->type == "userDefined"){
+            auto idName = this->userDefineType->getName();
+            auto userType = generator.getUserDefinedTypeByName(idName);
+            if (userType->isStruct){
+
+            } else {
+                arrayType = userType->defArrayType;
+                size = userType->size;
+                for (int i = 0; i < size; i++) {
+                    if (userType->typeVec[i] == "integer"){
+                        element.push_back(TheBuilder.getInt32(0));
+                    } else if (userType->typeVec[i] == "real") {
+                        element.push_back(llvm::ConstantFP::get(TheBuilder.getDoubleTy(), 0.0));
+                    } else if (userType->typeVec[i] == "char") {
+                        element.push_back(TheBuilder.getInt8(0));
+                    } else if (userType->typeVec[i] == "boolean") {
+                        element.push_back(TheBuilder.getInt1(0));
+                    } else if (userType->typeVec[i] == "string") {
+                        element.push_back(TheBuilder.getInt8(0));
+                    }
+                }
+                    return llvm::ConstantArray::get(arrayType, element);
+            }
+        }
+        else
+        {
             return nullptr;
         }
     }
@@ -362,20 +406,13 @@ llvm::Value *TypeDeclaration::codeGen(Generator & generator) {
             size = this->type->arrayType->range->varRangeType->size();
         }
         auto varType = this->type->arrayType->type->buildInType;
-        llvm::Type *llvmType;
-        if (varType == "integer") {
-            llvmType = TheBuilder.getInt32Ty();
-        } else if (varType == "real") {
-            llvmType = TheBuilder.getDoubleTy();
-        } else if (varType == "char") {
-            llvmType = TheBuilder.getInt8Ty();
-        } else if (varType == "string") {
-            llvmType = TheBuilder.getInt8PtrTy();
-        } else if (varType == "boolean") {
-            llvmType = TheBuilder.getInt1Ty();
-        }
+        auto llvmType = this->type->getLLVMTypeByString(varType);
         auto newType = llvm::ArrayType::get(llvmType, size);
-        generator.typeStack.push_back(new UserDefinedType(name, newType));
+        vector<string> vec;
+        for (int i = 0; i < size; i++) {
+            vec.push_back(varType);
+        }
+        generator.typeStack.push_back(new UserDefinedType(name, newType, vec));
     }
     else if (this->type->type == "record")
     {
@@ -537,7 +574,9 @@ llvm::Value *AssignStatement::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Assign Statement");
     llvm::Value *res = nullptr;
     this->generatePrologue(generator);
-    if (this->assignType == "identifier"){
+    // cout << this->assignType << endl;
+    if (this->assignType == "identifier")
+    {
         llvm::Value *rhsValue = this->rhs->codeGen(generator); 
         llvm::Value *lhsValue = generator.getValueByName(this->lhs->getName()); 
         // so that we can support assign int to real 
@@ -548,10 +587,14 @@ llvm::Value *AssignStatement::codeGen(Generator & generator) {
                 rhsValue = llvm::ConstantFP::get(TheBuilder.getDoubleTy(), (double)constIntValue); 
             }
         }
-        res = TheBuilder.CreateStore(rhsValue, lhsValue); 
-    } else if (this->assignType == "array") {
-        res = TheBuilder.CreateStore(this->rhs->codeGen(generator), (new ArrayReference(this->lhs, this->sub))->getReference(generator)); 
-    } else if (this->assignType == "record") {
+        res = TheBuilder.CreateStore(rhsValue, lhsValue);
+    }
+    else if (this->assignType == "array")
+    {
+        res = TheBuilder.CreateStore(this->rhs->codeGen(generator), (new ArrayReference(this->lhs, this->sub))->getReference(generator));
+    }
+    else if (this->assignType == "record")
+    {
         res = nullptr;
     }
     this->generateEpilogue(generator);

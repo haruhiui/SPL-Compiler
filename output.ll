@@ -3,19 +3,13 @@ source_filename = "main"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
 
-@a = external global [3 x i32]
-@e = external global [3 x i32]
+@a = global [3 x i32] zeroinitializer
+@e = global [3 x i32] zeroinitializer
 @c = global double 0.000000e+00
-@b = global [3 x i32] zeroinitializer
-@.str = constant [5 x i8] c"%lf\0A\00"
 
 define void @main() {
 entrypoint:
   store double 5.000000e+00, double* @c
-  %tmp = load double, double* @c
-  %sqrr = call double @sqrr(double %tmp)
-  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.str, i32 0, i32 0), double %sqrr)
-  store i32 6, i32* getelementptr inbounds ([3 x i32], [3 x i32]* @b, i32 0, i32 1)
   ret void
 }
 

@@ -338,13 +338,21 @@ class UserDefinedType {
 public:
     string name;
     bool isStruct;
+    size_t size;
+    vector<string> typeVec;
     llvm::ArrayType *defArrayType;
     llvm::StructType *defRecordType;
-    UserDefinedType(string name, llvm::ArrayType *defArrayType):
-        name(name), defArrayType(defArrayType) {this->isStruct = false;}
+    UserDefinedType(string name, llvm::ArrayType *defArrayType, vector<string> typeVec ):
+        name(name), defArrayType(defArrayType), typeVec(typeVec) {
+            this->isStruct = false;
+            this->size = typeVec.size();
+    }
 
-    UserDefinedType(string name, llvm::StructType *defRecordType):
-        name(name), defRecordType(defRecordType) {this->isStruct = true;}
+    UserDefinedType(string name, llvm::StructType *defRecordType, vector<string> typeVec ):
+        name(name), defRecordType(defRecordType), typeVec(typeVec) {
+            this->isStruct = true;
+            this->size = typeVec.size();
+    }
 
 };
 
@@ -388,7 +396,8 @@ public:
     virtual string jsonGen() override;
     
     llvm::Type* toLLVMType(Generator & generator);
-    llvm::Constant* initValue(Generator & generator, ConstValue *v = nullptr);
+    llvm::Type* getLLVMTypeByString(string& name);
+    llvm::Constant *initValue(Generator &generator, ConstValue *v = nullptr);
 };
 
 class TypeDeclaration : public Statement {
