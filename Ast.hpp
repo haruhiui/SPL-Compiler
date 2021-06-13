@@ -1,5 +1,5 @@
-#ifndef AST_H 
-#define AST_H 
+#ifndef AST_HPP
+#define AST_HPP  
 
 #include <llvm/IR/Value.h> 
 #include <llvm/IR/DerivedTypes.h>
@@ -69,7 +69,8 @@ using ArgsList = vector<Expression *>;
 using CaseExprList = vector<CaseExpression *>;
 
 // base node
-class Node{
+class Node
+{
 public:
     // generate intermediate code for llvm
     virtual llvm::Value *codeGen(Generator & generator) = 0;
@@ -82,18 +83,18 @@ public:
 
 
 // expression: doesn't support goto
-class Expression : public Node {};
+class Expression : public Node 
+{
+
+};
 
 // identifier
-class Identifier : public Expression{
+class Identifier : public Expression
+{
 public:
     string *name;
 
     Identifier(string *name) : name(name) { }
-
-    string getName() {
-        return *name;
-    }
     
     virtual string jsonGen() override;
     
@@ -101,7 +102,8 @@ public:
 };
 
 // const value
-class ConstValue : public Expression{
+class ConstValue : public Expression
+{
 public:
     union Value {
         int i;
@@ -121,7 +123,8 @@ public:
     }
 };
 
-class Integer : public ConstValue{
+class Integer : public ConstValue
+{
 public:
     int value;
     Integer(int value) : value(value) {
@@ -143,7 +146,8 @@ public:
     virtual string jsonGen() override;
 };
 
-class Real : public ConstValue{
+class Real : public ConstValue
+{
 public:
     double value;
     Real(double value) : value(value) {
@@ -165,7 +169,8 @@ public:
     virtual string jsonGen() override;
 };
 
-class Char : public ConstValue{
+class Char : public ConstValue
+{
 public:
     char value;
     Char(char value) : value(value) { 
@@ -187,7 +192,8 @@ public:
     virtual string jsonGen() override;
 };
 
-class String : public ConstValue{
+class String : public ConstValue
+{
 public:
     string* value;
     String(string* value) : value(value) { 
@@ -209,7 +215,8 @@ public:
     virtual string jsonGen() override;
 };
 
-class Boolean : public ConstValue{
+class Boolean : public ConstValue
+{
 public:
     bool value;
     Boolean(bool value) : value(value) { 
@@ -232,7 +239,8 @@ public:
 };
 
 // statement: support goto
-class Statement : public Node {
+class Statement : public Node 
+{
 public:
     llvm::BasicBlock *nextBlock;
     int label = -1; // default, not set by user
@@ -250,7 +258,8 @@ public:
 };
 
 // declare const value
-class ConstDeclaration : public Statement{
+class ConstDeclaration : public Statement
+{
 public:
     Identifier *name;
     ConstValue *value;
@@ -267,7 +276,8 @@ public:
     }
 };
 
-class EnumType : public Statement {
+class EnumType : public Statement 
+{
 public:
     NameList *enumList;
 
@@ -278,7 +288,8 @@ public:
     virtual string jsonGen() override;
 };
 
-class ConstRangeType : public Statement {
+class ConstRangeType : public Statement 
+{
 public:
     ConstValue *lowerBound, *upperBound;
     llvm::Value *lowerValue, *upperValue;
@@ -294,7 +305,8 @@ public:
     llvm::Value *mapIndex(llvm::Value* indexValue, Generator& generator);
 };
 
-class VarRangeType : public Statement {
+class VarRangeType : public Statement 
+{
 public:
     Identifier *lowerBound , *upperBound;
     llvm::Value *lowerValue, *upperValue, *lowerValueAddr, *upperValueAddr;
@@ -310,7 +322,8 @@ public:
     size_t size();
 };
 
-class FieldDeclaration : public Statement {
+class FieldDeclaration : public Statement 
+{
 public:
     NameList *nameList;
     AstType *type;
@@ -334,7 +347,8 @@ public:
     virtual string jsonGen() override;
 };
 
-class UserDefinedType {
+class UserDefinedType 
+{
 public:
     string name;
     bool isStruct;
@@ -363,7 +377,8 @@ public:
 };
 
 // abstract type
-class AstType : public Statement {
+class AstType : public Statement 
+{
 public:
     string type;
     string buildInType;
@@ -391,7 +406,8 @@ public:
     llvm::Constant* initValue(Generator & generator, ConstValue *v = nullptr);
 };
 
-class TypeDeclaration : public Statement {
+class TypeDeclaration : public Statement 
+{
 public:
     Identifier *name;
     AstType *type;
@@ -402,7 +418,8 @@ public:
     virtual string jsonGen() override;
 };
 
-class VarDeclaration : public Statement {
+class VarDeclaration : public Statement 
+{
 public:
     NameList *nameList;
     AstType *type;
@@ -418,7 +435,8 @@ public:
     }
 };
 
-class FuncDeclaration : public Statement {
+class FuncDeclaration : public Statement 
+{
 public: 
     Identifier *name;
     ParaList *paraList;
@@ -443,7 +461,8 @@ public:
     virtual string jsonGen() override;
 };
 
-class Parameter : public Statement {
+class Parameter : public Statement 
+{
 public:
     bool isVar;
     NameList *nameList;
@@ -454,16 +473,13 @@ public:
         this->type = type;
     }
 
-    AstType* getType() {
-        return type;
-    }
-
     virtual llvm::Value *codeGen(Generator & generator) override;
 
     virtual string jsonGen() override;
 };
 
-class Routine : public Node {
+class Routine : public Node 
+{
 public:
     ConstDeclList *constDeclList;
     TypeDeclList *typeDeclList;
@@ -492,7 +508,8 @@ public:
     }
 };
 
-class Program : public Node {
+class Program : public Node 
+{
 public:
     string *programID;
     Routine *routine;
@@ -610,36 +627,17 @@ public:
 
 };
 
-class SysProcedureCall : public Statement {
+class SysProcedureCall : public Statement 
+{
 public:
-    enum SysProcedure {
-        SPL_WRITE,
-        SPL_WRITELN,
-        SPL_READ,
-        SPL_ERROR_PROCEDURE
-    };
-
-    SysProcedure getProcedure(string *name) {
-        string &sname = *name;
-        if(sname == "write")
-            return SPL_WRITE;
-        else if(sname == "writeln")
-            return SPL_WRITELN;
-        else if(sname == "read")
-            return SPL_READ;
-        else
-            return SPL_ERROR_PROCEDURE;
-    }
-
-    SysProcedure procedure;
     ArgsList *args;
     string *name;
 
-    SysProcedureCall(string *name) : procedure(getProcedure(name)), name(name) {
+    SysProcedureCall(string *name) : name(name) {
         args = new ArgsList(); 
     }
-    SysProcedureCall(string *name, ArgsList *args) : procedure(getProcedure(name)), args(args), name(name) { }
-    SysProcedureCall(string *name, Expression *expr) : procedure(getProcedure(name)), args(new ArgsList()), name(name) {
+    SysProcedureCall(string *name, ArgsList *args) : args(args), name(name) { }
+    SysProcedureCall(string *name, Expression *expr) : args(new ArgsList()), name(name) {
         args->push_back(expr);
     }
 

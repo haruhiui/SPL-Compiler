@@ -7,12 +7,12 @@ var
     t,f : boolean;
 
 begin
-    r := abs(-2.3);
+    // r := abs(-2.3);
     a := abs(-157);
     writeln(r," ",a);
 
     b := sqr(5);
-    p := sqrt(49);
+    p := sqrt(49.0);
     writeln(b," ",p);
 
     letter := chr(65);
@@ -25,11 +25,11 @@ begin
     d := ord('a');
     writeln(d);
 
-    f := pred(true);
-    ch := pred('f');
+    // f := pred(true);
+    // ch := pred('f');
     writeln(f," ",ch);
 
-    t := succ(false);
+    // t := succ(false);
     e := succ(87);
     writeln(t," ",e);
 end.

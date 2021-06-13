@@ -58,8 +58,6 @@ python ParseTreeVisualizer.py parseTree.json
 ## TODO
 
 * Allow function be defined in a function.
-* writeln; should support newline.
-* Ast.hpp:505 and Ast.hpp:616 contains enum 
 
 ## Time Line
 

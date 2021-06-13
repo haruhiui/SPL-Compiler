@@ -415,7 +415,8 @@ function_head
 procedure_decl 
 	: procedure_head SEMI sub_routine SEMI
 	{ 
-		$$ = $1; $$->setRoutine($3); 
+		$$ = $1; 
+		$$->setRoutine($3); 
 	}
 	;
 
