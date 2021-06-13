@@ -589,7 +589,8 @@ llvm::Value *AssignStatement::codeGen(Generator & generator) {
     }
     else if (this->assignType == "array")
     {
-        res = TheBuilder.CreateStore(this->targetValue->codeGen(generator), (new ArrayReference(this->targetVar, this->index))->getReference(generator));
+        res = TheBuilder.CreateStore(this->targetValue->codeGen(generator), 
+            (new ArrayReference(this->targetVar, this->index))->getReference(generator));
     }
     else if (this->assignType == "record")
     {
@@ -687,15 +688,10 @@ llvm::Value *UserProcedure::codeGen(Generator & generator) {
     llvm::Function::arg_iterator argIt =  function->arg_begin();
     for (auto & arg : *(this->args))
     {
-        if (argIt->hasNonNullAttr())
-        {
-//            cout << "Pass a pointer" << endl;
+        if (argIt->hasNonNullAttr()) {
             llvm::Value * addr = generator.getValueByName(*(dynamic_cast<Identifier*>(arg)->name));
             args.push_back(addr);
-        }
-        else
-        {
-//            cout << "Pass a value" << endl;
+        } else {
             args.push_back(arg->codeGen(generator));
         }
         argIt++;
@@ -799,8 +795,7 @@ llvm::Value *SystemFunction::SysFuncSqr(Generator & generator) {
 llvm::Value *SystemFunction::SysFuncSqrt(Generator & generator) {
     vector<llvm::Value*> params;
     auto arg = this->args->front();
-    llvm::Value  *argValue;
-    //Just common variable
+    llvm::Value  *argValue; 
     argValue = arg->codeGen(generator);
     params.push_back(argValue);
     return TheBuilder.CreateCall(generator.sqrt, params, "sqrt");
@@ -819,38 +814,25 @@ llvm::Value *SystemProcedure::SysProcWrite(Generator & generator, bool isLineBre
 {
     string formatStr = "";
     vector<llvm::Value*> params;
-    for (auto & arg : *(this->args))
-    {
+    for (auto & arg : *(this->args)) {
         llvm::Value* argValue = arg->codeGen(generator);
-        if (argValue->getType() == TheBuilder.getInt32Ty())
-        {
+        if (argValue->getType() == TheBuilder.getInt32Ty()) {
             formatStr += "%d";
-        }
-        else if (argValue->getType() == TheBuilder.getInt8Ty())
-        {
+        } else if (argValue->getType() == TheBuilder.getInt8Ty()) {
             formatStr += "%c"; 
-        }
-        else if (argValue->getType() == TheBuilder.getInt8PtrTy()) 
-        { 
+        } else if (argValue->getType() == TheBuilder.getInt8PtrTy()) { 
             formatStr += "%s"; 
-        }
-        else if (argValue->getType() == TheBuilder.getInt1Ty())
-        {
+        } else if (argValue->getType() == TheBuilder.getInt1Ty()) {
             formatStr += "%d";
-        }
-        else if (argValue->getType()->isDoubleTy())
-        {
+        } else if (argValue->getType()->isDoubleTy()) {
             formatStr += "%lf";
-        }
-        else
-        {
+        } else {
             // 
         }
         params.push_back(argValue);
     }
 
-    if (isLineBreak)
-    {
+    if (isLineBreak) {
         formatStr += "\n";
     }
     auto formatConst = llvm::ConstantDataArray::getString(*TheContext, formatStr.c_str());

@@ -27,7 +27,12 @@ def c2w(src:str):
         .replace('*','MUL')\
         .replace('/','DIV')\
         .replace('%','MOD')\
-        .replace('.','DOT')
+        .replace('.','DOT')\
+        .replace('<','LEFTLESS')\
+        .replace('>','RIGHTGREATER')\
+        .replace('=','EQUALS')\
+        .replace(':','COLON')\
+        .replace(';','SEMICOLON')
         
 def w2c(src:str):
     return src.replace('PLUS','+')\
@@ -35,7 +40,12 @@ def w2c(src:str):
         .replace('MUL','*')\
         .replace('DIV','/')\
         .replace('MOD','%')\
-        .replace('DOT','.')
+        .replace('DOT','.')\
+        .replace('LEFTLESS','<')\
+        .replace('RIGHTGREATER','>')\
+        .replace('EQUALS','=')\
+        .replace('COLON',':')\
+        .replace('SEMICOLON',';')
 
 def add_node(node_name,children_list,res):
     index = node_name.rfind('_')

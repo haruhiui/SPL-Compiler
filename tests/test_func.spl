@@ -5,11 +5,11 @@ var
 
 function switch_c_to_f(c : real): real;
 begin
-    switch_c_to_f := c*(9/5)+32;
+    switch_c_to_f := c*(9/5.0)+32;
 end;
 
 
 begin
-    f := switch_c_to_f(37);
+    f := switch_c_to_f(37.0);
     writeln(f);
 end.

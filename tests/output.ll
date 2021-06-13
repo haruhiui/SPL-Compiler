@@ -3,29 +3,133 @@ source_filename = "main"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
 
-@ic = constant i32 2
-@rc = constant double 2.000000e+00
-@iv = global i32 0
-@rv1 = global double 0.000000e+00
-@rv2 = global double 0.000000e+00
-@rv3 = global double 0.000000e+00
-@.str = constant [4 x i8] c"%d\0A\00"
-@.str.1 = constant [5 x i8] c"%lf\0A\00"
-@.str.2 = constant [5 x i8] c"%lf\0A\00"
-@.str.3 = constant [2 x i8] c"\0A\00"
+@month = global i32 0
+@days = global i32 0
+@0 = private unnamed_addr constant [15 x i8] c"Input month : \00", align 1
+@.str = constant [3 x i8] c"%s\00"
+@1 = private unnamed_addr constant [3 x i8] c"%d\00", align 1
+@2 = private unnamed_addr constant [11 x i8] c"Days is : \00", align 1
+@.str.1 = constant [6 x i8] c"%s%d\0A\00"
 
 define void @main() {
 entrypoint:
-  store i32 234, i32* @iv
-  store double 0x407B01F972474539, double* @rv1
-  store double 1.230000e+02, double* @rv2
-  %tmp = load i32, i32* @iv
-  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i32 0, i32 0), i32 %tmp)
-  %tmp1 = load double, double* @rv1
-  %printf2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.str.1, i32 0, i32 0), double %tmp1)
-  %tmp3 = load double, double* @rv3
-  %printf4 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.str.2, i32 0, i32 0), double %tmp3)
-  %printf5 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.3, i32 0, i32 0))
+  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str, i32 0, i32 0), i8* getelementptr inbounds ([15 x i8], [15 x i8]* @0, i32 0, i32 0))
+  %tmp = load i32, i32* @month
+  %scanf = call i32 (...) @scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @1, i32 0, i32 0), i32* @month)
+  %tmp1 = load i32, i32* @month
+  br label %switch
+
+afterCase:                                        ; preds = %case23, %switch22, %case21, %case19, %case17, %case15, %case13, %case11, %case9, %case7, %case5, %case3, %case
+  %tmp24 = load i32, i32* @days
+  %0 = icmp ne i32 %tmp24, 0
+  %ifCond = icmp ne i1 %0, false
+  br i1 %ifCond, label %then, label %else
+
+switch:                                           ; preds = %entrypoint
+  %1 = icmp eq i32 %tmp1, 1
+  br i1 %1, label %case, label %switch2
+
+case:                                             ; preds = %switch
+  store i32 31, i32* @days
+  br label %afterCase
+
+switch2:                                          ; preds = %switch
+  %2 = icmp eq i32 %tmp1, 2
+  br i1 %2, label %case3, label %switch4
+
+case3:                                            ; preds = %switch2
+  store i32 28, i32* @days
+  br label %afterCase
+
+switch4:                                          ; preds = %switch2
+  %3 = icmp eq i32 %tmp1, 3
+  br i1 %3, label %case5, label %switch6
+
+case5:                                            ; preds = %switch4
+  store i32 31, i32* @days
+  br label %afterCase
+
+switch6:                                          ; preds = %switch4
+  %4 = icmp eq i32 %tmp1, 4
+  br i1 %4, label %case7, label %switch8
+
+case7:                                            ; preds = %switch6
+  store i32 30, i32* @days
+  br label %afterCase
+
+switch8:                                          ; preds = %switch6
+  %5 = icmp eq i32 %tmp1, 5
+  br i1 %5, label %case9, label %switch10
+
+case9:                                            ; preds = %switch8
+  store i32 31, i32* @days
+  br label %afterCase
+
+switch10:                                         ; preds = %switch8
+  %6 = icmp eq i32 %tmp1, 6
+  br i1 %6, label %case11, label %switch12
+
+case11:                                           ; preds = %switch10
+  store i32 30, i32* @days
+  br label %afterCase
+
+switch12:                                         ; preds = %switch10
+  %7 = icmp eq i32 %tmp1, 7
+  br i1 %7, label %case13, label %switch14
+
+case13:                                           ; preds = %switch12
+  store i32 31, i32* @days
+  br label %afterCase
+
+switch14:                                         ; preds = %switch12
+  %8 = icmp eq i32 %tmp1, 8
+  br i1 %8, label %case15, label %switch16
+
+case15:                                           ; preds = %switch14
+  store i32 31, i32* @days
+  br label %afterCase
+
+switch16:                                         ; preds = %switch14
+  %9 = icmp eq i32 %tmp1, 9
+  br i1 %9, label %case17, label %switch18
+
+case17:                                           ; preds = %switch16
+  store i32 30, i32* @days
+  br label %afterCase
+
+switch18:                                         ; preds = %switch16
+  %10 = icmp eq i32 %tmp1, 10
+  br i1 %10, label %case19, label %switch20
+
+case19:                                           ; preds = %switch18
+  store i32 31, i32* @days
+  br label %afterCase
+
+switch20:                                         ; preds = %switch18
+  %11 = icmp eq i32 %tmp1, 11
+  br i1 %11, label %case21, label %switch22
+
+case21:                                           ; preds = %switch20
+  store i32 30, i32* @days
+  br label %afterCase
+
+switch22:                                         ; preds = %switch20
+  %12 = icmp eq i32 %tmp1, 12
+  br i1 %12, label %case23, label %afterCase
+
+case23:                                           ; preds = %switch22
+  store i32 31, i32* @days
+  br label %afterCase
+
+then:                                             ; preds = %afterCase
+  %tmp25 = load i32, i32* @days
+  %printf26 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([6 x i8], [6 x i8]* @.str.1, i32 0, i32 0), i8* getelementptr inbounds ([11 x i8], [11 x i8]* @2, i32 0, i32 0), i32 %tmp25)
+  br label %merge
+
+else:                                             ; preds = %afterCase
+  br label %merge
+
+merge:                                            ; preds = %else, %then
   ret void
 }
 

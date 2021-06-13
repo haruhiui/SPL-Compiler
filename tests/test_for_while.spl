@@ -1,8 +1,7 @@
 program test_for_while;
 
 var
-    t,s : real;
-    i,j,n : integer;
+    t,s,i,j,n : integer;
 
 begin
     s := 0;
@@ -21,12 +20,11 @@ begin
     begin
         j := 1;
         t := 1;
-        repeat
+        while j<=n do
         begin
             t := t*j;
             j := j+1;
         end;
-        until j = n+1;
         s := s+t;
         n := n+1;
     end;

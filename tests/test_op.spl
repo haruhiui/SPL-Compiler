@@ -14,10 +14,11 @@ begin
     rv2 := 123; 
     // rv3 := 12; 
 
-    writeln(iv); 
-    writeln(rv1); 
-    writeln(rv3); 
-    writeln; 
+    iv := 1; 
+    repeat 
+        iv := iv + 1; 
+        writeln(iv); 
+    until iv = 10; 
 
 end
 . 

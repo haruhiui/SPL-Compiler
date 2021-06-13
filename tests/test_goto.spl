@@ -1,17 +1,15 @@
 program test_goto;
 
 var 
-    a : char;
+    a : integer;
 
 begin
-4:  writeln('what kind of math do you want to do ?');
-    writeln('a walk');
-    writeln('b run');
-    writeln('c sleep');
-    writeln('d eat');
-    read(a);
-    if a='a' then begin
-        writeln("please walk");
-    end
-    else goto 4;
+    a := 1;
+    while 1=1 do
+        begin
+            writeln("a = ",a);
+            a := a+1;
+            if a=5 then goto 2;
+        end;
+2:  writeln("over!");
 end.

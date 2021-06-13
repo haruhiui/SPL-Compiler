@@ -4,7 +4,7 @@ var
     a,b,c : integer;
     d,e,f : real;
     p,q,r : char;
-    t,f :boolean;
+    t :boolean;
 
 begin
     a := 5;
