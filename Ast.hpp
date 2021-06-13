@@ -503,8 +503,6 @@ public:
 
 class AssignStatement : public Statement 
 {
-private:
-
 public:
     enum AssignType {
         ID_ASSIGN,
@@ -525,9 +523,8 @@ public:
     virtual string jsonGen() override;
 };
 
-class BinaryExpression : public Expression {
-private:
-
+class BinaryExpression : public Expression 
+{
 public: 
     Expression *lhs;
     Expression *rhs;
@@ -541,8 +538,6 @@ public:
 
 class ArrayReference : public Expression 
 {
-private:
-
 public:
     Identifier *array;
     Expression *index;
@@ -558,8 +553,6 @@ public:
 
 class RecordReference : public Expression 
 {
-private:
-
 public:
     Identifier *record;
     Identifier *field;
@@ -572,8 +565,6 @@ public:
 
 class FunctionCall : public Expression, public Statement
 {
-private:
-
 public:
     Identifier *function;
     ArgsList *args;
@@ -587,8 +578,6 @@ public:
 
 class ProcedureCall : public Statement 
 {
-private:
-
 public:
     Identifier *funcName;
     ArgsList *args;
@@ -602,8 +591,6 @@ public:
 
 class SysFunctionCall : public Expression, public Statement
 {
-private:
-
 public:
     ArgsList *args;
     string funcName;
@@ -651,7 +638,9 @@ public:
     ArgsList *args;
     string *name;
 
-    SysProcedureCall(string *name) : procedure(getProcedure(name)), name(name) { }
+    SysProcedureCall(string *name) : procedure(getProcedure(name)), name(name) {
+        args = new ArgsList(); 
+    }
     SysProcedureCall(string *name, ArgsList *args) : procedure(getProcedure(name)), args(args), name(name) { }
     SysProcedureCall(string *name, Expression *expr) : procedure(getProcedure(name)), args(new ArgsList()), name(name) {
         args->push_back(expr);

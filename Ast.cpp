@@ -134,6 +134,21 @@ llvm::Value *BinaryOp(llvm::Value *L, string op, llvm::Value *R)
 {
     // ori: multi tmps 
     bool flag = L->getType()->isDoubleTy() || R->getType()->isDoubleTy();
+    if (L->getType()->isDoubleTy() || R->getType()->isDoubleTy()) {
+        if (L->getType()->isIntegerTy()) {
+            if (llvm::ConstantInt* CI = llvm::dyn_cast<llvm::ConstantInt>(L)) {
+                int constIntValue = CI->getSExtValue(); 
+                L = llvm::ConstantFP::get(TheBuilder.getDoubleTy(), (double)constIntValue); 
+            }
+        }
+        if (R->getType()->isIntegerTy()) {
+            if (llvm::ConstantInt* CI = llvm::dyn_cast<llvm::ConstantInt>(R)) {
+                int constIntValue = CI->getSExtValue(); 
+                R = llvm::ConstantFP::get(TheBuilder.getDoubleTy(), (double)constIntValue); 
+            }
+        }
+    }
+
     if (op == "+") {
         return flag ? TheBuilder.CreateFAdd(L, R) : TheBuilder.CreateAdd(L, R);
     } else if (op == "-") {
@@ -141,24 +156,25 @@ llvm::Value *BinaryOp(llvm::Value *L, string op, llvm::Value *R)
     } else if (op == "*") {
         return flag ? TheBuilder.CreateFMul(L, R) : TheBuilder.CreateMul(L, R);
     } else if (op == "/") {
-        if (!flag) {
-            return TheBuilder.CreateSDiv(L, R); 
-        } else {
-            if (L->getType()->isIntegerTy()) {
-                if (llvm::ConstantInt* CI = llvm::dyn_cast<llvm::ConstantInt>(L)) {
-                    int constIntValue = CI->getSExtValue(); 
-                    L = llvm::ConstantFP::get(TheBuilder.getDoubleTy(), (double)constIntValue); 
-                    return TheBuilder.CreateFDiv(L, R);  
-                }
-            } else if (R->getType()->isIntegerTy()) {
-                if (llvm::ConstantInt* CI = llvm::dyn_cast<llvm::ConstantInt>(R)) {
-                    int constIntValue = CI->getSExtValue(); 
-                    R = llvm::ConstantFP::get(TheBuilder.getDoubleTy(), (double)constIntValue); 
-                    return TheBuilder.CreateFDiv(L, R); 
-                }
-            } 
-        }
-        return TheBuilder.CreateFDiv(L, R); 
+        return flag ? TheBuilder.CreateFDiv(L, R) : TheBuilder.CreateSDiv(L, R); 
+        // if (!flag) {
+        //     return TheBuilder.CreateSDiv(L, R); 
+        // } else {
+        //     if (L->getType()->isIntegerTy()) {
+        //         if (llvm::ConstantInt* CI = llvm::dyn_cast<llvm::ConstantInt>(L)) {
+        //             int constIntValue = CI->getSExtValue(); 
+        //             L = llvm::ConstantFP::get(TheBuilder.getDoubleTy(), (double)constIntValue); 
+        //             return TheBuilder.CreateFDiv(L, R);  
+        //         }
+        //     } else if (R->getType()->isIntegerTy()) {
+        //         if (llvm::ConstantInt* CI = llvm::dyn_cast<llvm::ConstantInt>(R)) {
+        //             int constIntValue = CI->getSExtValue(); 
+        //             R = llvm::ConstantFP::get(TheBuilder.getDoubleTy(), (double)constIntValue); 
+        //             return TheBuilder.CreateFDiv(L, R); 
+        //         }
+        //     } 
+        // }
+        // return TheBuilder.CreateFDiv(L, R); 
     } else if (op == ">=") {
         return TheBuilder.CreateICmpSGE(L, R);
     } else if (op == ">") {
@@ -475,6 +491,16 @@ llvm::Value *AssignStatement::codeGen(Generator & generator) {
         case ID_ASSIGN: {
             llvm::Value *rhsValue = this->rhs->codeGen(generator); 
             llvm::Value *lhsValue = generator.getValueByName(this->lhs->getName()); 
+
+            // so that we can support assign int to real 
+            // https://stackoverflow.com/questions/47997388/how-can-we-extract-pointer-type-in-llvm
+            if (lhsValue->getType()->getPointerElementType()->isDoubleTy() && rhsValue->getType()->isIntegerTy()) {
+                if (llvm::ConstantInt* CI = llvm::dyn_cast<llvm::ConstantInt>(rhsValue)) {
+                    int constIntValue = CI->getSExtValue(); 
+                    rhsValue = llvm::ConstantFP::get(TheBuilder.getDoubleTy(), (double)constIntValue); 
+                }
+            }
+
             res = TheBuilder.CreateStore(rhsValue, lhsValue); 
             break;
         }
@@ -1034,10 +1060,16 @@ string jsonfy(string name) {
 string jsonfy(string name, vector<string> children) {
     string result = "{\"name\":\"" + name + "\", \"children\":[";
     int i;
-    for (i = 0; i < children.size() - 1;i++){
-        result += children[i] + ",";
+
+    if (children.size() != 0) {
+        for (i = 0; i < children.size() - 1;i++){
+            result += children[i] + ",";
+        }
+        result += children[i] + "]}";
+    } 
+    else {
+        result += "]}"; 
     }
-    result += children[i] + "]}";
     return result;
 }
 

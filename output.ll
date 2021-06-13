@@ -3,37 +3,29 @@ source_filename = "main"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
 
-@l = constant i32 1
-@r = constant i32 6
-@i = global i32 0
-@a = global [3 x i32] zeroinitializer
+@ic = constant i32 2
+@rc = constant double 2.000000e+00
+@iv = global i32 0
+@rv1 = global double 0.000000e+00
+@rv2 = global double 0.000000e+00
+@rv3 = global double 0.000000e+00
 @.str = constant [4 x i8] c"%d\0A\00"
+@.str.1 = constant [5 x i8] c"%lf\0A\00"
+@.str.2 = constant [5 x i8] c"%lf\0A\00"
+@.str.3 = constant [2 x i8] c"\0A\00"
 
 define void @main() {
 entrypoint:
-  store i32 3, i32* getelementptr inbounds ([3 x i32], [3 x i32]* @a, i32 0, i32 0)
-  store i32 4, i32* getelementptr inbounds ([3 x i32], [3 x i32]* @a, i32 0, i32 1)
-  store i32 5, i32* getelementptr inbounds ([3 x i32], [3 x i32]* @a, i32 0, i32 2)
-  store i32 1, i32* @i
-  br label %cond
-
-cond:                                             ; preds = %loop, %entrypoint
-  %tmp = load i32, i32* @i
-  %0 = icmp sle i32 %tmp, 3
-  %forCond = icmp ne i1 %0, false
-  br i1 %forCond, label %loop, label %afterLoop
-
-loop:                                             ; preds = %cond
-  %tmp1 = load i32, i32* @i
-  %1 = sub i32 %tmp1, 1
-  %2 = getelementptr inbounds [3 x i32], [3 x i32]* @a, i32 0, i32 %1
-  %arrRef = load i32, i32* %2
-  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i32 0, i32 0), i32 %arrRef)
-  %3 = add i32 %tmp, 1
-  store i32 %3, i32* @i
-  br label %cond
-
-afterLoop:                                        ; preds = %cond
+  store i32 234, i32* @iv
+  store double 0x407B01F972474539, double* @rv1
+  store double 1.230000e+02, double* @rv2
+  %tmp = load i32, i32* @iv
+  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i32 0, i32 0), i32 %tmp)
+  %tmp1 = load double, double* @rv1
+  %printf2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.str.1, i32 0, i32 0), double %tmp1)
+  %tmp3 = load double, double* @rv3
+  %printf4 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.str.2, i32 0, i32 0), double %tmp3)
+  %printf5 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.3, i32 0, i32 0))
   ret void
 }
 
