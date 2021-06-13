@@ -30,7 +30,7 @@ class EnumType;
 class AstArrayType;
 class RecordType;
 class ConstRangeType;
-class EnumRangeType;
+class VarRangeType;
 class FieldDeclaration;
 class FuncDeclaration;
 class Parameter;
@@ -289,9 +289,10 @@ public:
 
 class ConstRangeType : public Statement {
 public:
-    ConstValue *lowBound, *upBound;
-
-    ConstRangeType(ConstValue *lowBound, ConstValue *upBound) : lowBound(lowBound), upBound(upBound) { }
+    ConstValue *lowerBound, *upperBound;
+    llvm::Value *lowerValue, *upperValue;
+    
+    ConstRangeType(ConstValue *lowerBound, ConstValue *upperBound) : lowerBound(lowerBound), upperBound(upperBound) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
     
@@ -299,13 +300,13 @@ public:
     
     size_t size() {
         int s;
-        if (lowBound->valueType == upBound->valueType && lowBound->isValidConstRangeType()) {
-            if (lowBound->valueType == "integer") {
-            //    std::cout << lowBound->getValue().i << ".." << upBound->getValue().i << std::endl;
-                s = upBound->getValue().i - lowBound->getValue().i + 1;
+        if (lowerBound->valueType == upperBound->valueType && lowerBound->isValidConstRangeType()) {
+            if (lowerBound->valueType == "integer") {
+            //    std::cout << lowerBound->getValue().i << ".." << upperBound->getValue().i << std::endl;
+                s = upperBound->getValue().i - lowerBound->getValue().i + 1;
             } else {
-            //    std::cout << lowBound->getValue().c << ".." << upBound->getValue().c << std::endl;
-                s = upBound->getValue().c - lowBound->getValue().c + 1;
+            //    std::cout << lowerBound->getValue().c << ".." << upperBound->getValue().c << std::endl;
+                s = upperBound->getValue().c - lowerBound->getValue().c + 1;
             }
             if (s <= 0) {
                 throw range_error("[ERROR] low > up.");
@@ -319,17 +320,18 @@ public:
     llvm::Value *mapIndex(llvm::Value* indexValue, Generator& generator);
 };
 
-class EnumRangeType : public Statement {
+class VarRangeType : public Statement {
 public:
-    Identifier *lowBound , *upBound;
+    Identifier *lowerBound , *upperBound;
+    llvm::Value *lowerValue, *upperValue, *lowerValueAddr, *upperValueAddr;
 
-    EnumRangeType(Identifier *lowBound, Identifier *upBound) : lowBound(lowBound), upBound(upBound) { }
+    VarRangeType(Identifier *lowerBound, Identifier *upperBound) : lowerBound(lowerBound), upperBound(upperBound) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
     
     virtual string jsonGen() override;
     
-    llvm::Value *lowValue, *upValue, *lowValueAddr, *upValueAddr;
+    
     
     llvm::Value *mapIndex(llvm::Value *indexValue, Generator & generator);
     
@@ -367,7 +369,7 @@ public:
     RecordType *recordType;
     EnumType *enumType;
     ConstRangeType *constRangeType;
-    EnumRangeType *enumRangeType;
+    VarRangeType *varRangeType;
     string buildInType;
     Identifier *userDefineType;
     string type;
@@ -376,7 +378,7 @@ public:
     AstType(RecordType *rt) : recordType(rt), type("record") { }
     AstType(EnumType *et) : enumType(et), type("enum") { }
     AstType(ConstRangeType *crt) : constRangeType(crt), type("constRange") { }
-    AstType(EnumRangeType *ert) : enumRangeType(ert), type("enumRange") { }
+    AstType(VarRangeType *ert) : varRangeType(ert), type("varRange") { }
     AstType(string buildIn) : buildInType(buildIn), type("builtin") { }
     AstType(Identifier *udt) : userDefineType(udt), type("userDefined") { }
     AstType() : type("void") { }

@@ -1,15 +1,17 @@
 program test_array;
-
-type
-    arr = array[1..50] of integer;
-
+const
+	l = 1;
+	r = 6;
 var
-    a : arr;
     i : integer;
+    a : array[1..3] of integer;
 
 begin
-    writeln("Enter 10 integer: ");
-    for i := 1 to 10 do read(a[i]);
-    for i := 10 downto 1 do
+    a[1] := 3;
+    a[2] := 4;
+    a[3] := 5;
+    for i := 1 to 3 do
+    begin
     writeln(a[i]);
+    end;
 end.

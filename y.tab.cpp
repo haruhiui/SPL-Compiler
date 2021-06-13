@@ -220,7 +220,7 @@ union YYSTYPE
 	AstArrayType *AstArrayType;
 	RecordType  *recordType;
 	ConstRangeType *constRangeType;
-	EnumRangeType *enumRangeType;
+	VarRangeType *VarRangeType;
 	FieldDeclaration *fieldDeclaration;
 	FuncDeclaration *funcDeclaration;
 	Parameter *parameter;
@@ -1893,7 +1893,7 @@ yyreduce:
   case 30:
 #line 296 "spl.y"
         { 
-		(yyval.type) = new AstType(new EnumRangeType((yyvsp[-2].identifier), (yyvsp[0].identifier))); 
+		(yyval.type) = new AstType(new VarRangeType((yyvsp[-2].identifier), (yyvsp[0].identifier))); 
 	}
 #line 1899 "y.tab.cpp"
     break;

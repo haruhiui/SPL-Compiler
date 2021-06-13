@@ -37,11 +37,11 @@ llvm::Type* AstType::toLLVMType(){
              this->arrayType->range->constRangeType->size());
         } else {
             return llvm::ArrayType::get(this->arrayType->type->toLLVMType(), 
-            this->arrayType->range->enumRangeType->size());
+            this->arrayType->range->varRangeType->size());
         }
     } else if (this->type == "constRange") {
         return TheBuilder.getInt32Ty();
-    } else if (this->type == "enumRange") {
+    } else if (this->type == "varRange") {
         return TheBuilder.getInt32Ty();
     } else if (this->type == "builtin") {
         if (buildInType == "integer") {
@@ -71,14 +71,14 @@ llvm::Constant* AstType::initValue(ConstValue *v)
             if (this->arrayType->range->type == "constRange") {
                 size = this->arrayType->range->constRangeType->size();
             } else {
-                size = this->arrayType->range->enumRangeType->size();
+                size = this->arrayType->range->varRangeType->size();
             }
             for (int i = 0; i < size; i++) {
                 element.push_back(this->arrayType->type->initValue(v));
             }
             arrayType = (llvm::ArrayType*)this->toLLVMType();
             return llvm::ConstantArray::get(arrayType, element);
-        } else if (this->type == "constRange" || this->type == "enumRange") {
+        } else if (this->type == "constRange" || this->type == "varRange") {
                 return TheBuilder.getInt32(v->getValue().i);
         } else if (this->type == "builtin") {
             if (buildInType == "integer"){
@@ -102,14 +102,14 @@ llvm::Constant* AstType::initValue(ConstValue *v)
             if (this->arrayType->range->type == "constRange") {
                 size = this->arrayType->range->constRangeType->size();
             } else {
-                size = this->arrayType->range->enumRangeType->size();
+                size = this->arrayType->range->varRangeType->size();
             }
             for (int i = 0; i < size; i++) {
                 element.push_back(this->arrayType->type->initValue());
             }
             arrayType = (llvm::ArrayType*)this->toLLVMType();
             return llvm::ConstantArray::get(arrayType, element);
-        } else if (this->type == "constRange" || this->type == "enumRange") {
+        } else if (this->type == "constRange" || this->type == "varRange") {
             return TheBuilder.getInt32(0);
         } else if (this->type == "builtin") {
             if (buildInType == "integer") {
@@ -208,7 +208,6 @@ llvm::Value *String::codeGen(Generator & generator) {
 
 llvm::Value *Real::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Real");
-//    return llvm::ConstantFP::get(*TheContext, llvm::APFloat(this->value));
     return llvm::ConstantFP::get(TheBuilder.getDoubleTy(), this->value);
 }
 
@@ -229,10 +228,7 @@ llvm::Value *ConstDeclaration::codeGen(Generator & generator) {
     }
 }
 
-llvm::Value *TypeDeclaration::codeGen(Generator & generator) {
-    echoInfo(__FILE__,__LINE__,"Type Declaration");
-    return nullptr;
-}
+
 
 llvm::Value *AstType::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Type");
@@ -240,8 +236,8 @@ llvm::Value *AstType::codeGen(Generator & generator) {
         this->arrayType->codeGen(generator);
     } else if (this->type == "constRange") {
         this->constRangeType->codeGen(generator);
-    } else if (this->type == "enumRange") {
-        this->enumRangeType->codeGen(generator);
+    } else if (this->type == "varRange") {
+        this->varRangeType->codeGen(generator);
     } else if (this->type == "record") {
         this->recordType->codeGen(generator);
     } else if (this->type == "enum") {
@@ -268,19 +264,33 @@ llvm::Value *RecordType::codeGen(Generator & generator) {
     return nullptr;
 }
 
-llvm::Value *ConstRangeType::mapIndex(llvm::Value *indexValue, Generator & generator) {
-    return BinaryOp(indexValue, "-", this->lowBound->codeGen(generator));
-}
-
 llvm::Value *ConstRangeType::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Const Range Type");
+    this->upperValue = this->upperBound->codeGen(generator);
+    this->lowerValue = this->lowerBound->codeGen(generator);
     this->size();
     return nullptr;
 }
 
-llvm::Value *EnumRangeType::mapIndex(llvm::Value *indexValue, Generator & generator) {
-    return BinaryOp(indexValue, "-", this->lowValue);
+llvm::Value *VarRangeType::codeGen(Generator & generator) {
+    echoInfo(__FILE__,__LINE__,"Enum Range Type");
+    this->upperValue = this->upperBound->codeGen(generator);
+    this->lowerValue = this->lowerBound->codeGen(generator);
+    this->upperValueAddr = generator.getValueByName(this->upperBound->getName());
+    this->lowerValueAddr = generator.getValueByName(this->lowerBound->getName());
+    this->size();
+    return nullptr;
 }
+
+llvm::Value *ConstRangeType::mapIndex(llvm::Value *indexValue, Generator & generator) {
+    return BinaryOp(indexValue, "-", this->lowerBound->codeGen(generator));
+}
+
+llvm::Value *VarRangeType::mapIndex(llvm::Value *indexValue, Generator & generator) {
+    return BinaryOp(indexValue, "-", this->lowerValue);
+}
+
+
 
 int64_t getActualValue(llvm::Value *v) {
     llvm::Constant *constValue = llvm::cast<llvm::GlobalVariable>(v)->getInitializer();
@@ -288,11 +298,11 @@ int64_t getActualValue(llvm::Value *v) {
     return constInt->getSExtValue();
 }
 
-size_t EnumRangeType::size() {
+size_t VarRangeType::size() {
     int64_t low = 1, up = 0;
-    if (this->lowValue->getType() == this->upValue->getType()) {
-        low = getActualValue(this->lowValueAddr);
-        up = getActualValue(this->upValueAddr);
+    if (this->lowerValue->getType() == this->upperValue->getType()) {
+        low = getActualValue(this->lowerValueAddr);
+        up = getActualValue(this->upperValueAddr);
 //        cout << "low: " << low << " up: " << up << endl;
         if (low > up) {
             throw std::range_error("[ERROR] low > up.");
@@ -303,18 +313,18 @@ size_t EnumRangeType::size() {
     return up - low + 1;
 }
 
-llvm::Value *EnumRangeType::codeGen(Generator & generator) {
-    echoInfo(__FILE__,__LINE__,"Enum Range Type");
-    this->upValue = this->upBound->codeGen(generator);
-    this->lowValue = this->lowBound->codeGen(generator);
-    this->upValueAddr = generator.getValueByName(this->upBound->getName());
-    this->lowValueAddr = generator.getValueByName(this->lowBound->getName());
-    this->size();
-    return nullptr;
-}
+
 
 llvm::Value *FieldDeclaration::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Field Declaration");
+    return nullptr;
+}
+
+llvm::Value *TypeDeclaration::codeGen(Generator & generator) {
+    echoInfo(__FILE__,__LINE__,"Type Declaration");
+    string name = this->name->getName();
+    cout << name << endl;
+    this->type->codeGen(generator);
     return nullptr;
 }
 
@@ -399,33 +409,24 @@ llvm::Value *FuncDeclaration::codeGen(Generator & generator) {
 
 llvm::Value *Parameter::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Parameter");
-    //Not need
     return nullptr;
 }
 
 llvm::Value *Routine::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Routine");
     llvm::Value* res = nullptr;
-    
-    //Const declareation part
     for (auto & constDecl : *(this->constDeclList)){
         res = constDecl->codeGen(generator);
     }
-    //Type declareation part
     for (auto & typeDecl : *(this->typeDeclList)){
         res = typeDecl->codeGen(generator);
     }
-    //Variable declareation part
     for (auto & varDecl : *(this->varDeclList)){
         res = varDecl->codeGen(generator);
     }
-
-    //Routine declareation part
     for (auto & routineDecl : *(this->routineList)){
         res = routineDecl->codeGen(generator);
     }
-    
-    //Routine body
     res = routineBody->codeGen(generator);
     return res;
 }
@@ -505,13 +506,13 @@ llvm::Value *ArrayReference::codeGen(Generator & generator) {
 llvm::Value *ArrayReference::getReference(Generator & generator) {
     string name = this->array->getName();
     llvm::Value* arrayValue = generator.getValueByName(name), *indexValue;
-    if (generator.arrayMap[name]->range->type == "cosntRange")
+    if (generator.arrayMap[name]->range->type == "constRange")
     {
         indexValue = generator.arrayMap[name]->range->constRangeType->mapIndex(this->index->codeGen(generator), generator);
     }
     else
     {
-        indexValue = generator.arrayMap[name]->range->enumRangeType->mapIndex(this->index->codeGen(generator), generator);
+        indexValue = generator.arrayMap[name]->range->varRangeType->mapIndex(this->index->codeGen(generator), generator);
     }
     vector<llvm::Value*> indexList;
     indexList.push_back(TheBuilder.getInt32(0));
@@ -1105,16 +1106,16 @@ string AstArrayType::jsonGen() {
 
 string ConstRangeType::jsonGen() {
     vector<string> children;
-    children.push_back(jsonfy("lowBound", lowBound->jsonGen()));
-    children.push_back(jsonfy("upBound", upBound->jsonGen()));
+    children.push_back(jsonfy("lowerBound", lowerBound->jsonGen()));
+    children.push_back(jsonfy("upperBound", upperBound->jsonGen()));
     return jsonfy("ConstRangeType", children);
 }
 
-string EnumRangeType::jsonGen() {
+string VarRangeType::jsonGen() {
     vector<string> children;
-    children.push_back(jsonfy("lowBound", lowBound->jsonGen()));
-    children.push_back(jsonfy("upBound", upBound->jsonGen()));
-    return jsonfy("EnumRangeType", children);
+    children.push_back(jsonfy("lowerBound", lowerBound->jsonGen()));
+    children.push_back(jsonfy("upperBound", upperBound->jsonGen()));
+    return jsonfy("VarRangeType", children);
 }
 
 string FieldDeclaration::jsonGen() {
@@ -1146,8 +1147,8 @@ string AstType::jsonGen() {
         return enumType->jsonGen();
     } else if (this->type == "constRange") {
         return constRangeType->jsonGen();
-    } else if (this->type == "enumRange") {
-        return enumRangeType->jsonGen();
+    } else if (this->type == "varRange") {
+        return varRangeType->jsonGen();
     } else if (this->type == "builtin") {
         if (buildInType == "integer"){
             return jsonfy("SYS_TYPE", jsonfy("Integer"));

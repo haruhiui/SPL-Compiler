@@ -36,7 +36,7 @@ Program *root;
 	AstArrayType *AstArrayType;
 	RecordType  *recordType;
 	ConstRangeType *constRangeType;
-	EnumRangeType *enumRangeType;
+	VarRangeType *VarRangeType;
 	FieldDeclaration *fieldDeclaration;
 	FuncDeclaration *funcDeclaration;
 	Parameter *parameter;
@@ -294,7 +294,7 @@ simple_type_decl
 	}
 	| name DOTDOT name
 	{ 
-		$$ = new AstType(new EnumRangeType($1, $3)); 
+		$$ = new AstType(new VarRangeType($1, $3)); 
 	}
 	;
 

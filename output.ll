@@ -3,15 +3,37 @@ source_filename = "main"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
 
-@a = global i32 0
+@l = constant i32 1
+@r = constant i32 6
+@i = global i32 0
+@a = global [3 x i32] zeroinitializer
 @.str = constant [4 x i8] c"%d\0A\00"
 
 define void @main() {
 entrypoint:
-  store i32 5, i32* @a
-  %tmp = load i32, i32* @a
-  %sqr = call i32 @sqr(i32 %tmp)
-  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i32 0, i32 0), i32 %sqr)
+  store i32 3, i32* getelementptr inbounds ([3 x i32], [3 x i32]* @a, i32 0, i32 0)
+  store i32 4, i32* getelementptr inbounds ([3 x i32], [3 x i32]* @a, i32 0, i32 1)
+  store i32 5, i32* getelementptr inbounds ([3 x i32], [3 x i32]* @a, i32 0, i32 2)
+  store i32 1, i32* @i
+  br label %cond
+
+cond:                                             ; preds = %loop, %entrypoint
+  %tmp = load i32, i32* @i
+  %0 = icmp sle i32 %tmp, 3
+  %forCond = icmp ne i1 %0, false
+  br i1 %forCond, label %loop, label %afterLoop
+
+loop:                                             ; preds = %cond
+  %tmp1 = load i32, i32* @i
+  %1 = sub i32 %tmp1, 1
+  %2 = getelementptr inbounds [3 x i32], [3 x i32]* @a, i32 0, i32 %1
+  %arrRef = load i32, i32* %2
+  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i32 0, i32 0), i32 %arrRef)
+  %3 = add i32 %tmp, 1
+  store i32 %3, i32* @i
+  br label %cond
+
+afterLoop:                                        ; preds = %cond
   ret void
 }
 

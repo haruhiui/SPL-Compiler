@@ -141,7 +141,7 @@ union YYSTYPE
 	AstArrayType *AstArrayType;
 	RecordType  *recordType;
 	ConstRangeType *constRangeType;
-	EnumRangeType *enumRangeType;
+	VarRangeType *VarRangeType;
 	FieldDeclaration *fieldDeclaration;
 	FuncDeclaration *funcDeclaration;
 	Parameter *parameter;
