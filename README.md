@@ -58,7 +58,8 @@ python ParseTreeVisualizer.py parseTree.json
 ## TODO
 
 * Allow function be defined in a function.
-* Writeln() should support newline.
+* writeln; should support newline.
+* Ast.hpp:505 and Ast.hpp:616 contains enum 
 
 ## Time Line
 
@@ -78,11 +79,6 @@ python ParseTreeVisualizer.py parseTree.json
 * 6.11
     * add: able to generate all system functions
     * feature: using Newton-Raphson method to solve sqrt
-
-## bugs 
-
-1. /tests/test_exp.spl, llc: error 
-2. 
 
 ## bug fix 
 
@@ -110,3 +106,14 @@ else
 
 * fix: 使用const定义数组会出现segment fault的问题
     * 更新constrange的实现
+    
+* fix: const values in array 
+
+* fix: able to assign integer value to a real type 
+    * Ast.hpp:481, lhsValue->getType()->getPointerElementType()->isDoubleTy() 
+
+* fix: support real and integer mixed operation 
+    * Ast.hpp:136, if one of the operator is real and the other is integer, then convert the integer one to real 
+
+* fix: support writeln; 
+    * Ast.cpp:1065, add size == 0 

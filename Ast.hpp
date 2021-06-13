@@ -505,28 +505,23 @@ public:
 class AssignStatement : public Statement 
 {
 public:
-    enum AssignType {
-        ID_ASSIGN,
-        ARRAY_ASSIGN,
-        RECORD_ASSIGN
-    };
+
     Identifier *lhs;
     Expression *rhs;
     Expression *sub;
     Identifier *field;
-    AssignType type;
+    string assignType;
 
-    AssignStatement(Identifier *lhs, Expression *rhs) : lhs(lhs), rhs(rhs), type(ID_ASSIGN) { }
-    AssignStatement(Identifier *lhs, Expression *sub, Expression *rhs) : lhs(lhs), sub(sub), rhs(rhs), type(ARRAY_ASSIGN) { }
-    AssignStatement(Identifier *lhs, Identifier *field, Expression *rhs) : lhs(lhs), field(field), rhs(rhs), type(RECORD_ASSIGN) { }
+    AssignStatement(Identifier *lhs, Expression *rhs) : lhs(lhs), rhs(rhs), assignType("identifier") { }
+    AssignStatement(Identifier *lhs, Expression *sub, Expression *rhs) : lhs(lhs), sub(sub), rhs(rhs), assignType("array") { }
+    AssignStatement(Identifier *lhs, Identifier *field, Expression *rhs) : lhs(lhs), field(field), rhs(rhs), assignType("record") { }
     
     virtual llvm::Value *codeGen(Generator & generator) override;
     virtual string jsonGen() override;
 };
 
-class BinaryExpression : public Expression {
-private:
-
+class BinaryExpression : public Expression 
+{
 public: 
     Expression *lhs;
     Expression *rhs;
@@ -540,8 +535,6 @@ public:
 
 class ArrayReference : public Expression 
 {
-private:
-
 public:
     Identifier *array;
     Expression *index;
@@ -557,8 +550,6 @@ public:
 
 class RecordReference : public Expression 
 {
-private:
-
 public:
     Identifier *record;
     Identifier *field;
@@ -571,8 +562,6 @@ public:
 
 class FunctionCall : public Expression, public Statement
 {
-private:
-
 public:
     Identifier *function;
     ArgsList *args;
@@ -586,8 +575,6 @@ public:
 
 class ProcedureCall : public Statement 
 {
-private:
-
 public:
     Identifier *funcName;
     ArgsList *args;
@@ -601,8 +588,6 @@ public:
 
 class SysFunctionCall : public Expression, public Statement
 {
-private:
-
 public:
     ArgsList *args;
     string funcName;
@@ -650,7 +635,9 @@ public:
     ArgsList *args;
     string *name;
 
-    SysProcedureCall(string *name) : procedure(getProcedure(name)), name(name) { }
+    SysProcedureCall(string *name) : procedure(getProcedure(name)), name(name) {
+        args = new ArgsList(); 
+    }
     SysProcedureCall(string *name, ArgsList *args) : procedure(getProcedure(name)), args(args), name(name) { }
     SysProcedureCall(string *name, Expression *expr) : procedure(getProcedure(name)), args(new ArgsList()), name(name) {
         args->push_back(expr);

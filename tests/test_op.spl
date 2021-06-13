@@ -9,12 +9,15 @@ var
     rv3 : real; 
 
 begin 
-    // iv := 234; 
-    // rv1 := 432.1234; 
-    // rv2 := 123.0; 
-    rv3 := 12.0; 
+    iv := 234; 
+    rv1 := 432.1234; 
+    rv2 := 123; 
+    // rv3 := 12; 
 
+    writeln(iv); 
+    writeln(rv1); 
     writeln(rv3); 
+    writeln; 
 
 end
 . 

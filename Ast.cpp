@@ -142,32 +142,30 @@ llvm::Constant* AstType::initValue(Generator & generator,ConstValue *v)
 llvm::Value *BinaryOp(llvm::Value *L, string op, llvm::Value *R)
 {
     // ori: multi tmps 
-    bool flag = L->getType()->isDoubleTy() || R->getType()->isDoubleTy();
-    if (op == "+") {
-        return flag ? TheBuilder.CreateFAdd(L, R) : TheBuilder.CreateAdd(L, R);
-    } else if (op == "-") {
-        return flag ? TheBuilder.CreateFSub(L, R) : TheBuilder.CreateSub(L, R);
-    } else if (op == "*") {
-        return flag ? TheBuilder.CreateFMul(L, R) : TheBuilder.CreateMul(L, R);
-    } else if (op == "/") {
-        if (!flag) {
-            return TheBuilder.CreateSDiv(L, R); 
-        } else {
-            if (L->getType()->isIntegerTy()) {
-                if (llvm::ConstantInt* CI = llvm::dyn_cast<llvm::ConstantInt>(L)) {
-                    int constIntValue = CI->getSExtValue(); 
-                    L = llvm::ConstantFP::get(TheBuilder.getDoubleTy(), (double)constIntValue); 
-                    return TheBuilder.CreateFDiv(L, R);  
-                }
-            } else if (R->getType()->isIntegerTy()) {
-                if (llvm::ConstantInt* CI = llvm::dyn_cast<llvm::ConstantInt>(R)) {
-                    int constIntValue = CI->getSExtValue(); 
-                    R = llvm::ConstantFP::get(TheBuilder.getDoubleTy(), (double)constIntValue); 
-                    return TheBuilder.CreateFDiv(L, R); 
-                }
-            } 
+    bool anyDouble = L->getType()->isDoubleTy() || R->getType()->isDoubleTy();
+    if (L->getType()->isDoubleTy() || R->getType()->isDoubleTy()) {
+        if (L->getType()->isIntegerTy()) {
+            if (llvm::ConstantInt* CI = llvm::dyn_cast<llvm::ConstantInt>(L)) {
+                int constIntValue = CI->getSExtValue(); 
+                L = llvm::ConstantFP::get(TheBuilder.getDoubleTy(), (double)constIntValue); 
+            }
         }
-        return TheBuilder.CreateFDiv(L, R); 
+        if (R->getType()->isIntegerTy()) {
+            if (llvm::ConstantInt* CI = llvm::dyn_cast<llvm::ConstantInt>(R)) {
+                int constIntValue = CI->getSExtValue(); 
+                R = llvm::ConstantFP::get(TheBuilder.getDoubleTy(), (double)constIntValue); 
+            }
+        }
+    }
+
+    if (op == "+") {
+        return anyDouble ? TheBuilder.CreateFAdd(L, R) : TheBuilder.CreateAdd(L, R);
+    } else if (op == "-") {
+        return anyDouble ? TheBuilder.CreateFSub(L, R) : TheBuilder.CreateSub(L, R);
+    } else if (op == "*") {
+        return anyDouble ? TheBuilder.CreateFMul(L, R) : TheBuilder.CreateMul(L, R);
+    } else if (op == "/") {
+        return anyDouble ? TheBuilder.CreateFDiv(L, R) : TheBuilder.CreateSDiv(L, R); 
     } else if (op == ">=") {
         return TheBuilder.CreateICmpSGE(L, R);
     } else if (op == ">") {
@@ -225,17 +223,7 @@ llvm::Value *Boolean::codeGen(Generator & generator) {
     return TheBuilder.getInt1(this->value);
 }
 
-llvm::Value *ConstDeclaration::codeGen(Generator & generator) {
-    echoInfo(__FILE__,__LINE__,"Const Declaration");
-    string name = this->name->getName();
-    this->type = new AstType(this->value->valueType);
-    if (this->isGlobal) {
-         return new llvm::GlobalVariable(*generator.TheModule, this->type->toLLVMType(generator), true, llvm::GlobalValue::ExternalLinkage, this->type->initValue(generator,this->value), name);
-    } else {
-        auto alloc = CreateEntryBlockAlloca(generator.funcStack.back(), name, this->type->toLLVMType(generator));
-        return TheBuilder.CreateStore(this->value->codeGen(generator), alloc);
-    }
-}
+
 
 llvm::Value *AstType::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Type");
@@ -250,14 +238,13 @@ llvm::Value *AstType::codeGen(Generator & generator) {
     } else if (this->type == "enum") {
         this->enumType->codeGen(generator);
     } else if (this->type == "userDefined") {
-        this->userDefineType->codeGen(generator);
+        // this->userDefineType->codeGen(generator);
     }
     return (llvm::Value*)this->toLLVMType(generator);
 }
 
 llvm::Value *EnumType::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Enum Type");
-    // TODO
     return nullptr;
 }
 
@@ -344,6 +331,24 @@ llvm::Value *FieldDeclaration::codeGen(Generator & generator) {
     return nullptr;
 }
 
+llvm::Value *ConstDeclaration::codeGen(Generator & generator) {
+    echoInfo(__FILE__,__LINE__,"Const Declaration");
+    string name = this->name->getName();
+    this->type = new AstType(this->value->valueType);
+    if (this->isGlobal) {
+         return new llvm::GlobalVariable(
+                *generator.TheModule,
+                this->type->toLLVMType(generator), 
+                true, 
+                llvm::GlobalValue::ExternalLinkage, 
+                this->type->initValue(generator,this->value), 
+                name);
+    } else {
+        auto alloc = CreateEntryBlockAlloca(generator.funcStack.back(), name, this->type->toLLVMType(generator));
+        return TheBuilder.CreateStore(this->value->codeGen(generator), alloc);
+    }
+}
+
 llvm::Value *TypeDeclaration::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Type Declaration");
     string name = this->name->getName();
@@ -356,8 +361,20 @@ llvm::Value *TypeDeclaration::codeGen(Generator & generator) {
         } else {
             size = this->type->arrayType->range->varRangeType->size();
         }
-        // llvm::ArrayType::get(llvm::Type::getInt32Ty(*TheContext), size);
-        auto newType = llvm::ArrayType::get(TheBuilder.getInt32Ty(), size);
+        auto varType = this->type->arrayType->type->buildInType;
+        llvm::Type *llvmType;
+        if (varType == "integer") {
+            llvmType = TheBuilder.getInt32Ty();
+        } else if (varType == "real") {
+            llvmType = TheBuilder.getDoubleTy();
+        } else if (varType == "char") {
+            llvmType = TheBuilder.getInt8Ty();
+        } else if (varType == "string") {
+            llvmType = TheBuilder.getInt8PtrTy();
+        } else if (varType == "boolean") {
+            llvmType = TheBuilder.getInt1Ty();
+        }
+        auto newType = llvm::ArrayType::get(llvmType, size);
         generator.typeStack.push_back(new UserDefinedType(name, newType));
     }
     else if (this->type->type == "record")
@@ -382,7 +399,13 @@ llvm::Value *VarDeclaration::codeGen(Generator & generator) {
         }
         varType = (llvm::Type*)(this->type->codeGen(generator));
         if (this->isGlobal) {
-            alloc = new llvm::GlobalVariable(*generator.TheModule, varType, false, llvm::GlobalValue::ExternalLinkage, this->type->initValue(generator), id->getName());
+            alloc = new llvm::GlobalVariable(
+                *generator.TheModule, 
+                varType, 
+                false, 
+                llvm::GlobalValue::ExternalLinkage, 
+                this->type->initValue(generator), 
+                id->getName());
         } else {
             alloc = CreateEntryBlockAlloca(generator.funcStack.back(), id->getName(), varType);
         }
@@ -514,20 +537,22 @@ llvm::Value *AssignStatement::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Assign Statement");
     llvm::Value *res = nullptr;
     this->generatePrologue(generator);
-    switch (this->type)
-    {
-        case ID_ASSIGN: {
-            llvm::Value *rhsValue = this->rhs->codeGen(generator); 
-            llvm::Value *lhsValue = generator.getValueByName(this->lhs->getName()); 
-            res = TheBuilder.CreateStore(rhsValue, lhsValue); 
-            break;
+    if (this->assignType == "identifier"){
+        llvm::Value *rhsValue = this->rhs->codeGen(generator); 
+        llvm::Value *lhsValue = generator.getValueByName(this->lhs->getName()); 
+        // so that we can support assign int to real 
+        // https://stackoverflow.com/questions/47997388/how-can-we-extract-pointer-type-in-llvm
+        if (lhsValue->getType()->getPointerElementType()->isDoubleTy() && rhsValue->getType()->isIntegerTy()) {
+            if (llvm::ConstantInt* CI = llvm::dyn_cast<llvm::ConstantInt>(rhsValue)) {
+                int constIntValue = CI->getSExtValue(); 
+                rhsValue = llvm::ConstantFP::get(TheBuilder.getDoubleTy(), (double)constIntValue); 
+            }
         }
-        case ARRAY_ASSIGN: 
-            res = TheBuilder.CreateStore(this->rhs->codeGen(generator), (new ArrayReference(this->lhs, this->sub))->getReference(generator)); 
-            break;
-        case RECORD_ASSIGN: 
-            res = nullptr; 
-            break; 
+        res = TheBuilder.CreateStore(rhsValue, lhsValue); 
+    } else if (this->assignType == "array") {
+        res = TheBuilder.CreateStore(this->rhs->codeGen(generator), (new ArrayReference(this->lhs, this->sub))->getReference(generator)); 
+    } else if (this->assignType == "record") {
+        res = nullptr;
     }
     this->generateEpilogue(generator);
     return res;
@@ -1078,10 +1103,16 @@ string jsonfy(string name) {
 string jsonfy(string name, vector<string> children) {
     string result = "{\"name\":\"" + name + "\", \"children\":[";
     int i;
-    for (i = 0; i < children.size() - 1;i++){
-        result += children[i] + ",";
+
+    if (children.size() != 0) {
+        for (i = 0; i < children.size() - 1;i++){
+            result += children[i] + ",";
+        }
+        result += children[i] + "]}";
+    } 
+    else {
+        result += "]}"; 
     }
-    result += children[i] + "]}";
     return result;
 }
 
@@ -1303,26 +1334,18 @@ string Routine::jsonGen() {
 
 string AssignStatement::jsonGen() {
     vector<string> children;
-    switch (type)
-    {
-    case ID_ASSIGN:
+    if (this->assignType == "identifier") {
         children.push_back(lhs->jsonGen());
         children.push_back(rhs->jsonGen());
-        break;
-    case ARRAY_ASSIGN:
+    } else if (this->assignType == "array") {
         children.push_back(lhs->jsonGen());
         children.push_back(sub->jsonGen());
         children.push_back(rhs->jsonGen());
-        break;
-    case RECORD_ASSIGN:
+    } else if (this->assignType == "record") {
         children.push_back(lhs->jsonGen());
         children.push_back(field->jsonGen());
         children.push_back(rhs->jsonGen());
-        break;
-    default:
-        break;
-    }    
-
+    }
     return jsonfy("AssignStatement", children);
 }
 
