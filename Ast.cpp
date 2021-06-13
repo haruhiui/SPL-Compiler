@@ -5,7 +5,7 @@ using namespace std;
 
 void echoInfo( const char* file,int line, const string & msg)
 {
-    // cout << "[FILE] "<< file << " [LINE NUM] " << line << " [INFO] " << msg  << endl;
+    cout << "[FILE] "<< file << " [LINE NUM] " << line << " [INFO] " << msg  << endl;
 }
 
 llvm::AllocaInst *CreateEntryBlockAlloca(llvm::Function *TheFunction, llvm::StringRef VarName, llvm::Type* type)
@@ -30,38 +30,33 @@ llvm::Type* toLLVMPtrType(string type)
     throw logic_error("Undefined type!");
 }
 
-llvm::Type* AstType::toLLVMType()
-{
-    switch (this->type)
-    {
-        case SPL_ARRAY:
-            if (this->arrayType->range->type == SPL_CONST_RANGE)
-            {
-                return llvm::ArrayType::get(this->arrayType->type->toLLVMType(), this->arrayType->range->constRangeType->size());
-            }
-            else
-            {
-                return llvm::ArrayType::get(this->arrayType->type->toLLVMType(), this->arrayType->range->enumRangeType->size());
-            }
-        case SPL_CONST_RANGE: return TheBuilder.getInt32Ty();
-        case SPL_ENUM_RANGE: return TheBuilder.getInt32Ty();
-        case SPL_BUILD_IN:
-            if (buildInType == "integer") {
-                return TheBuilder.getInt32Ty();
-            } else if (buildInType == "real") {
-                return TheBuilder.getDoubleTy();
-            } else if (buildInType == "char") {
-                return TheBuilder.getInt8Ty();
-            } else if (buildInType == "boolean") {
-                return TheBuilder.getInt1Ty();
-            } else if (buildInType == "string") { 
-                return TheBuilder.getInt8PtrTy();
-            }
-            break;
-        case SPL_ENUM:
-        case SPL_RECORD:
-        case SPL_USER_DEFINE:
-        case SPL_VOID: return TheBuilder.getVoidTy();
+llvm::Type* AstType::toLLVMType(){
+    if (this->type == "array"){
+        if (this->arrayType->range->type == "constRange"){
+            return llvm::ArrayType::get(this->arrayType->type->toLLVMType(),
+             this->arrayType->range->constRangeType->size());
+        } else {
+            return llvm::ArrayType::get(this->arrayType->type->toLLVMType(), 
+            this->arrayType->range->enumRangeType->size());
+        }
+    } else if (this->type == "constRange") {
+        return TheBuilder.getInt32Ty();
+    } else if (this->type == "enumRange") {
+        return TheBuilder.getInt32Ty();
+    } else if (this->type == "builtin") {
+        if (buildInType == "integer") {
+            return TheBuilder.getInt32Ty();
+        } else if (buildInType == "real") {
+            return TheBuilder.getDoubleTy();
+        } else if (buildInType == "char") {
+            return TheBuilder.getInt8Ty();
+        } else if (buildInType == "boolean") {
+            return TheBuilder.getInt1Ty();
+        } else if (buildInType == "string") { 
+            return TheBuilder.getInt8PtrTy();
+        }
+    } else {
+        return TheBuilder.getVoidTy();
     }
     return nullptr;
 }
@@ -71,84 +66,65 @@ llvm::Constant* AstType::initValue(ConstValue *v)
     vector<llvm::Constant*> element;
     llvm::ArrayType* arrayType;;
     size_t size = 0;
-    if (v != nullptr)
-    {
-        switch (this->type)
-        {
-            case SPL_ARRAY:
-                if (this->arrayType->range->type == SPL_CONST_RANGE)
-                {
-                    size = this->arrayType->range->constRangeType->size();
-                }
-                else
-                {
-                    size = this->arrayType->range->enumRangeType->size();
-                }
-                for (int i = 0; i < size; i++)
-                {
-                    element.push_back(this->arrayType->type->initValue(v));
-                }
-                arrayType = (llvm::ArrayType*)this->toLLVMType();
-                return llvm::ConstantArray::get(arrayType, element);
-            case SPL_CONST_RANGE:
-            case SPL_ENUM_RANGE: return TheBuilder.getInt32(v->getValue().i);
-            case SPL_BUILD_IN:
-                if (buildInType == "integer"){
-                    return TheBuilder.getInt32(v->getValue().i);
-                } else if (buildInType == "real") {
-                    return llvm::ConstantFP::get(TheBuilder.getDoubleTy(), v->getValue().r);
-                } else if (buildInType == "char") {
-                    return TheBuilder.getInt8(v->getValue().c);
-                } else if (buildInType == "boolean") {
-                    return TheBuilder.getInt1(v->getValue().b);
-                } else if (buildInType == "string") {
-                    return TheBuilder.CreateGlobalStringPtr(llvm::StringRef((const char*)(v->getValue().s)));
-                }
-                break;
-            case SPL_ENUM:
-            case SPL_RECORD:
-            case SPL_USER_DEFINE:
-            case SPL_VOID: return nullptr;
+    if (v != nullptr){
+        if (this->type == "array") {
+            if (this->arrayType->range->type == "constRange") {
+                size = this->arrayType->range->constRangeType->size();
+            } else {
+                size = this->arrayType->range->enumRangeType->size();
+            }
+            for (int i = 0; i < size; i++) {
+                element.push_back(this->arrayType->type->initValue(v));
+            }
+            arrayType = (llvm::ArrayType*)this->toLLVMType();
+            return llvm::ConstantArray::get(arrayType, element);
+        } else if (this->type == "constRange" || this->type == "enumRange") {
+                return TheBuilder.getInt32(v->getValue().i);
+        } else if (this->type == "builtin") {
+            if (buildInType == "integer"){
+                return TheBuilder.getInt32(v->getValue().i);
+            } else if (buildInType == "real") {
+                return llvm::ConstantFP::get(TheBuilder.getDoubleTy(), v->getValue().r);
+            } else if (buildInType == "char") {
+                return TheBuilder.getInt8(v->getValue().c);
+            } else if (buildInType == "boolean") {
+                return TheBuilder.getInt1(v->getValue().b);
+            } else if (buildInType == "string") {
+                return TheBuilder.CreateGlobalStringPtr(llvm::StringRef((const char*)(v->getValue().s)));
+            } else {
+                return nullptr;
+            }
+        } else {
+            return nullptr;
         }
-    }
-    else
-    {
-        switch (this->type)
-        {
-            case SPL_ARRAY:
-                if (this->arrayType->range->type == SPL_CONST_RANGE)
-                {
-                    size = this->arrayType->range->constRangeType->size();
-                }
-                else
-                {
-                    size = this->arrayType->range->enumRangeType->size();
-                }
-                for (int i = 0; i < size; i++)
-                {
-                    element.push_back(this->arrayType->type->initValue());
-                }
-                arrayType = (llvm::ArrayType*)this->toLLVMType();
-                return llvm::ConstantArray::get(arrayType, element);
-            case SPL_CONST_RANGE:
-            case SPL_ENUM_RANGE: return TheBuilder.getInt32(0);
-            case SPL_BUILD_IN:
-                if (buildInType == "integer") {
-                    return TheBuilder.getInt32(0);
-                } else if (buildInType == "real") {
-                    return llvm::ConstantFP::get(TheBuilder.getDoubleTy(), 0.0);
-                } else if (buildInType == "char") {
-                    return TheBuilder.getInt8(0);
-                } else if (buildInType == "boolean") {
-                    return TheBuilder.getInt1(0);
-                } else if (buildInType == "string") {
-                    return TheBuilder.getInt8(0);
-                }
-                break;
-            case SPL_ENUM:
-            case SPL_RECORD:
-            case SPL_USER_DEFINE:
-            case SPL_VOID: return nullptr;
+    } else {
+        if (this->type == "array") {
+            if (this->arrayType->range->type == "constRange") {
+                size = this->arrayType->range->constRangeType->size();
+            } else {
+                size = this->arrayType->range->enumRangeType->size();
+            }
+            for (int i = 0; i < size; i++) {
+                element.push_back(this->arrayType->type->initValue());
+            }
+            arrayType = (llvm::ArrayType*)this->toLLVMType();
+            return llvm::ConstantArray::get(arrayType, element);
+        } else if (this->type == "constRange" || this->type == "enumRange") {
+            return TheBuilder.getInt32(0);
+        } else if (this->type == "builtin") {
+            if (buildInType == "integer") {
+                return TheBuilder.getInt32(0);
+            } else if (buildInType == "real") {
+                return llvm::ConstantFP::get(TheBuilder.getDoubleTy(), 0.0);
+            } else if (buildInType == "char") {
+                return TheBuilder.getInt8(0);
+            } else if (buildInType == "boolean") {
+                return TheBuilder.getInt1(0);
+            } else if (buildInType == "string") {
+                return TheBuilder.getInt8(0);
+            }
+        } else {
+            return nullptr;
         }
     }
     return nullptr;
@@ -260,15 +236,18 @@ llvm::Value *TypeDeclaration::codeGen(Generator & generator) {
 
 llvm::Value *AstType::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Type");
-    switch (this->type) {
-        case SPL_ARRAY: 		this->arrayType->codeGen(generator); break;
-        case SPL_CONST_RANGE: 	this->constRangeType->codeGen(generator); break;
-        case SPL_ENUM_RANGE: 	this->enumRangeType->codeGen(generator); break;
-        case SPL_RECORD: 		this->recordType->codeGen(generator); break;
-        case SPL_ENUM: 			this->enumType->codeGen(generator); break;
-        case SPL_USER_DEFINE: 	this->userDefineType->codeGen(generator); break;
-        case SPL_BUILD_IN: 		break;
-        case SPL_VOID: 			break;
+    if (this->type == "array") {
+        this->arrayType->codeGen(generator);
+    } else if (this->type == "constRange") {
+        this->constRangeType->codeGen(generator);
+    } else if (this->type == "enumRange") {
+        this->enumRangeType->codeGen(generator);
+    } else if (this->type == "record") {
+        this->recordType->codeGen(generator);
+    } else if (this->type == "enum") {
+        this->enumType->codeGen(generator);
+    } else if (this->type == "userDefined") {
+        this->userDefineType->codeGen(generator);
     }
     return (llvm::Value*)this->toLLVMType();
 }
@@ -344,7 +323,7 @@ llvm::Value *VarDeclaration::codeGen(Generator & generator) {
     llvm::Value* alloc = nullptr;
     llvm::Type* varType;
     for (auto & id : *(this->nameList)) {
-        if (this->type->type == AstType::SPL_ARRAY) {
+        if (this->type->type == "array") {
             generator.arrayMap[id->getName()] = this->type->arrayType;
         }
         varType = (llvm::Type*)(this->type->codeGen(generator));
@@ -397,7 +376,7 @@ llvm::Value *FuncDeclaration::codeGen(Generator & generator) {
     
     //Return
     llvm::Value *res = nullptr;
-    if (this->returnType->type != AstType::SPL_VOID) {
+    if (this->returnType->type != "void") {
         res = CreateEntryBlockAlloca(function, this->name->getName(), this->returnType->toLLVMType());
     }
     
@@ -405,7 +384,7 @@ llvm::Value *FuncDeclaration::codeGen(Generator & generator) {
     this->subRoutine->codeGen(generator);
     
     //Return value
-    if (this->returnType->type != AstType::SPL_VOID) {
+    if (this->returnType->type != "void") {
         auto returnInst = this->name->codeGen(generator);
         TheBuilder.CreateRet(returnInst);
     } else {
@@ -429,23 +408,20 @@ llvm::Value *Routine::codeGen(Generator & generator) {
     llvm::Value* res = nullptr;
     
     //Const declareation part
-    for (auto & constDecl : *(this->constDeclList))
-    {
+    for (auto & constDecl : *(this->constDeclList)){
         res = constDecl->codeGen(generator);
     }
-    //Variable declareation part
-    for (auto & varDecl : *(this->varDeclList))
-    {
-        res = varDecl->codeGen(generator);
-    }
     //Type declareation part
-    for (auto & typeDecl : *(this->typeDeclList))
-    {
+    for (auto & typeDecl : *(this->typeDeclList)){
         res = typeDecl->codeGen(generator);
     }
+    //Variable declareation part
+    for (auto & varDecl : *(this->varDeclList)){
+        res = varDecl->codeGen(generator);
+    }
+
     //Routine declareation part
-    for (auto & routineDecl : *(this->routineList))
-    {
+    for (auto & routineDecl : *(this->routineList)){
         res = routineDecl->codeGen(generator);
     }
     
@@ -529,7 +505,7 @@ llvm::Value *ArrayReference::codeGen(Generator & generator) {
 llvm::Value *ArrayReference::getReference(Generator & generator) {
     string name = this->array->getName();
     llvm::Value* arrayValue = generator.getValueByName(name), *indexValue;
-    if (generator.arrayMap[name]->range->type == AstType::SPL_CONST_RANGE)
+    if (generator.arrayMap[name]->range->type == "cosntRange")
     {
         indexValue = generator.arrayMap[name]->range->constRangeType->mapIndex(this->index->codeGen(generator), generator);
     }
@@ -1162,18 +1138,17 @@ string RecordType::jsonGen() {
 }
 
 string AstType::jsonGen() {
-    switch (type){
-    case SPL_ARRAY:
+    if (this->type == "array") {
         return arrayType->jsonGen();
-    case SPL_RECORD:
+    } else if (this->type == "record") {
         return recordType->jsonGen();
-    case SPL_ENUM:
+    } else if (this->type == "enum") {
         return enumType->jsonGen();
-    case SPL_CONST_RANGE:
+    } else if (this->type == "constRange") {
         return constRangeType->jsonGen();
-    case SPL_ENUM_RANGE:
+    } else if (this->type == "enumRange") {
         return enumRangeType->jsonGen();
-    case SPL_BUILD_IN:
+    } else if (this->type == "builtin") {
         if (buildInType == "integer"){
             return jsonfy("SYS_TYPE", jsonfy("Integer"));
         } else if (buildInType == "real") {
@@ -1185,12 +1160,10 @@ string AstType::jsonGen() {
         } else if (buildInType == "string") {
             return jsonfy("SYS_TYPE", jsonfy("String"));
         }
-        break;
-    case SPL_USER_DEFINE:
+    } else if (this->type == "userDefined") {
         return jsonfy("UserDefineType", jsonfy(userDefineType->getName()));
-        break;
-    default:
-        return jsonfy("ErrorType");
+    } else {
+        return jsonfy("Unknown Type");
     }
     return nullptr;
 }

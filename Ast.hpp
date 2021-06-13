@@ -363,17 +363,6 @@ public:
 // abstract type
 class AstType : public Statement {
 public:
-    enum AstTypeType {
-        SPL_ARRAY,
-        SPL_RECORD,
-        SPL_ENUM,
-        SPL_CONST_RANGE,
-        SPL_ENUM_RANGE,
-        SPL_BUILD_IN,
-        SPL_USER_DEFINE,
-        SPL_VOID
-    };
-
     AstArrayType *arrayType;
     RecordType *recordType;
     EnumType *enumType;
@@ -381,16 +370,16 @@ public:
     EnumRangeType *enumRangeType;
     string buildInType;
     Identifier *userDefineType;
-    AstTypeType type;
+    string type;
 
-    AstType(AstArrayType *at) : arrayType(at), type(SPL_ARRAY) { }
-    AstType(RecordType *rt) : recordType(rt), type(SPL_RECORD) { }
-    AstType(EnumType *et) : enumType(et), type(SPL_ENUM) { }
-    AstType(ConstRangeType *crt) : constRangeType(crt), type(SPL_CONST_RANGE) { }
-    AstType(EnumRangeType *ert) : enumRangeType(ert), type(SPL_ENUM_RANGE) { }
-    AstType(string buildIn) : buildInType(buildIn), type(SPL_BUILD_IN) { }
-    AstType(Identifier *udt) : userDefineType(udt), type(SPL_USER_DEFINE) { }
-    AstType() : type(SPL_VOID) { }
+    AstType(AstArrayType *at) : arrayType(at), type("array") { }
+    AstType(RecordType *rt) : recordType(rt), type("record") { }
+    AstType(EnumType *et) : enumType(et), type("enum") { }
+    AstType(ConstRangeType *crt) : constRangeType(crt), type("constRange") { }
+    AstType(EnumRangeType *ert) : enumRangeType(ert), type("enumRange") { }
+    AstType(string buildIn) : buildInType(buildIn), type("builtin") { }
+    AstType(Identifier *udt) : userDefineType(udt), type("userDefined") { }
+    AstType() : type("void") { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
     virtual string jsonGen() override;
@@ -635,12 +624,8 @@ public:
 
 };
 
-class SysProcedureCall : public Statement 
-{
-private:
-
+class SysProcedureCall : public Statement {
 public:
-
     enum SysProcedure {
         SPL_WRITE,
         SPL_WRITELN,
@@ -677,8 +662,7 @@ public:
     llvm::Value *SysProcRead(Generator & generator);
 };
 
-class IfStatement : public Statement 
-{
+class IfStatement : public Statement {
 public:
     Expression *condition;
     Statement *thenStatement;
@@ -693,8 +677,7 @@ public:
     virtual string jsonGen() override;
 };
 
-class RepeatStatement : public Statement 
-{
+class RepeatStatement : public Statement {
 public:
     Expression *condition;
     StatementList *repeatStatement;
@@ -707,8 +690,7 @@ public:
     virtual string jsonGen() override;
 };
 
-class WhileStatement : public Statement 
-{
+class WhileStatement : public Statement {
 public:
     Expression *condition;
     Statement *stmt;
