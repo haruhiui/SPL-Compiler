@@ -2,23 +2,14 @@ program test_proc_func;
 
 var
     f : real;
-    i,j: integer;
 
 function switch_c_to_f(c : real): real;
 begin
     switch_c_to_f := c*(9/5)+32;
 end;
 
-procedure draw_star(n : integer);
-begin
-    for i := 1 to n do
-        write("*");
-    writeln("");
-end;
 
 begin
     f := switch_c_to_f(37);
     writeln(f);
-    for j := 1 to 6 do
-        draw_star(j);
 end.

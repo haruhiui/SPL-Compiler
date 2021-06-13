@@ -9,7 +9,7 @@ var
 begin
     a := 5;
     b := 6;
-    c := a*6+b-111;
+    c := a*6+b-111/7;
     writeln("c = ",c);
     c := 2*b div a;
     writeln("c = ",c);

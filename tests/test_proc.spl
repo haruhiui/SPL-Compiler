@@ -1,0 +1,16 @@
+program test_proc;
+
+var
+    i,j: integer;
+
+procedure draw_star(n : integer);
+begin
+    for i := 1 to n do
+        write("*");
+    writeln("");
+end;
+
+begin
+    for j := 1 to 6 do
+        draw_star(j);
+end.

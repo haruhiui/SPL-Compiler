@@ -107,3 +107,6 @@ else
 
 * fix: a.out和lli output.ll 运行结果不一致
     * 换用llvm自带的llc进行目标文件的生成
+
+* fix: 使用const定义数组会出现segment fault的问题
+    * 更新constrange的实现

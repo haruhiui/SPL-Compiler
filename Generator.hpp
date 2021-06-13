@@ -53,9 +53,9 @@ public:
                    *abs, *chr, *odd, *ord, *pred, 
                    *sqr, *sqrt, *succ, *sqrReal;
     std::vector<llvm::Function*> funcStack;
-    llvm::BasicBlock* labelBlocks[3000];
-    std::map<std::string, AstArrayType*> arrayMap;
-  
+    std::vector<UserDefinedType*> typeStack;
+    llvm::BasicBlock *labelBlocks[3000];
+    std::map<std::string, AstArrayType *> arrayMap;
 
     Generator() {
         TheModule = std::unique_ptr<llvm::Module>(new llvm::Module("main", *TheContext));
@@ -81,7 +81,16 @@ public:
 
         return value; 
     }
-    
+
+    UserDefinedType* getUserDefinedTypeByName(const std::string & name){
+        for (auto ud = typeStack.rbegin(); ud != typeStack.rend(); ud++){
+            if ((*ud)->name == name) {
+                return (*ud);
+            }
+        }
+        return nullptr;
+    }
+
     void pushFunction(llvm::Function* func) {
         funcStack.push_back(func);
     }

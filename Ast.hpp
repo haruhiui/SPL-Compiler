@@ -2,6 +2,7 @@
 #define AST_H 
 
 #include <llvm/IR/Value.h> 
+#include <llvm/IR/DerivedTypes.h>
 #include <iostream> 
 #include <string> 
 #include <vector> 
@@ -36,6 +37,7 @@ class FuncDeclaration;
 class Parameter;
 class Routine;
 class Program;
+class UserDefinedType;
 class AssignStatement;
 class BinaryExpression;
 class ArrayReference;
@@ -269,18 +271,7 @@ class EnumType : public Statement {
 public:
     NameList *enumList;
 
-    EnumType(NameList *nl) : enumList(nl) { }
-
-    virtual llvm::Value *codeGen(Generator & generator) override;
-    
-    virtual string jsonGen() override;
-};
-
-class AstArrayType : public Statement {
-public:
-    AstType *range, *type;
-
-    AstArrayType(AstType *type, AstType *range) : type(type), range(range) { }
+    EnumType(NameList *i) : enumList(i) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
     
@@ -297,25 +288,8 @@ public:
     virtual llvm::Value *codeGen(Generator & generator) override;
     
     virtual string jsonGen() override;
-    
-    size_t size() {
-        int s;
-        if (lowerBound->valueType == upperBound->valueType && lowerBound->isValidConstRangeType()) {
-            if (lowerBound->valueType == "integer") {
-            //    std::cout << lowerBound->getValue().i << ".." << upperBound->getValue().i << std::endl;
-                s = upperBound->getValue().i - lowerBound->getValue().i + 1;
-            } else {
-            //    std::cout << lowerBound->getValue().c << ".." << upperBound->getValue().c << std::endl;
-                s = upperBound->getValue().c - lowerBound->getValue().c + 1;
-            }
-            if (s <= 0) {
-                throw range_error("[ERROR] low > up.");
-            }
-        } else {
-            throw std::domain_error("[ERROR] Invalid range type.");
-        }
-        return s;
-    }
+
+    size_t size();
 
     llvm::Value *mapIndex(llvm::Value* indexValue, Generator& generator);
 };
@@ -330,8 +304,6 @@ public:
     virtual llvm::Value *codeGen(Generator & generator) override;
     
     virtual string jsonGen() override;
-    
-    
     
     llvm::Value *mapIndex(llvm::Value *indexValue, Generator & generator);
     
@@ -362,32 +334,61 @@ public:
     virtual string jsonGen() override;
 };
 
+class UserDefinedType {
+public:
+    string name;
+    bool isStruct;
+    llvm::ArrayType *defArrayType;
+    llvm::StructType *defRecordType;
+    UserDefinedType(string name, llvm::ArrayType *defArrayType):
+        name(name), defArrayType(defArrayType) {this->isStruct = false;}
+
+    UserDefinedType(string name, llvm::StructType *defRecordType):
+        name(name), defRecordType(defRecordType) {this->isStruct = true;}
+
+};
+
+// the concrete defined ways for array type : const..const or name..name
+class AstArrayType : public Statement {
+public:
+    //eg: in:  array[1..3] of integer 
+    //             *range*     *type*
+    AstType *type, *range;
+
+    AstArrayType(AstType *type, AstType *range) : type(type), range(range) { }
+
+    virtual llvm::Value *codeGen(Generator & generator) override;
+    
+    virtual string jsonGen() override;
+};
+
 // abstract type
 class AstType : public Statement {
 public:
+    string type;
+    string buildInType;
     AstArrayType *arrayType;
     RecordType *recordType;
     EnumType *enumType;
     ConstRangeType *constRangeType;
     VarRangeType *varRangeType;
-    string buildInType;
     Identifier *userDefineType;
-    string type;
+    
 
-    AstType(AstArrayType *at) : arrayType(at), type("array") { }
-    AstType(RecordType *rt) : recordType(rt), type("record") { }
-    AstType(EnumType *et) : enumType(et), type("enum") { }
-    AstType(ConstRangeType *crt) : constRangeType(crt), type("constRange") { }
-    AstType(VarRangeType *ert) : varRangeType(ert), type("varRange") { }
+    AstType(AstArrayType *i) : arrayType(i), type("array") { }
+    AstType(RecordType *i) : recordType(i), type("record") { }
+    AstType(EnumType *i) : enumType(i), type("enum") { }
+    AstType(ConstRangeType *i) : constRangeType(i), type("constRange") { }
+    AstType(VarRangeType *i) : varRangeType(i), type("varRange") { }
     AstType(string buildIn) : buildInType(buildIn), type("builtin") { }
-    AstType(Identifier *udt) : userDefineType(udt), type("userDefined") { }
+    AstType(Identifier *i) : userDefineType(i), type("userDefined") { }
     AstType() : type("void") { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
     virtual string jsonGen() override;
     
-    llvm::Type* toLLVMType();
-    llvm::Constant* initValue(ConstValue *v = nullptr);
+    llvm::Type* toLLVMType(Generator & generator);
+    llvm::Constant* initValue(Generator & generator, ConstValue *v = nullptr);
 };
 
 class TypeDeclaration : public Statement {
@@ -465,8 +466,8 @@ public:
 class Routine : public Node {
 public:
     ConstDeclList *constDeclList;
-    VarDeclList *varDeclList;
     TypeDeclList *typeDeclList;
+    VarDeclList *varDeclList;
     RoutineList *routineList;
     CompoundStatement *routineBody;
 
@@ -503,8 +504,6 @@ public:
 
 class AssignStatement : public Statement 
 {
-private:
-
 public:
     enum AssignType {
         ID_ASSIGN,

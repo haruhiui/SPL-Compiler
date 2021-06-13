@@ -26,6 +26,7 @@
         "utility": "cpp",
         "iterator": "cpp",
         "memory_resource": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "memory": "cpp"
     }
 }

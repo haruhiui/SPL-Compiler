@@ -30,13 +30,13 @@ llvm::Type* toLLVMPtrType(string type)
     throw logic_error("Undefined type!");
 }
 
-llvm::Type* AstType::toLLVMType(){
+llvm::Type* AstType::toLLVMType(Generator & generator){
     if (this->type == "array"){
         if (this->arrayType->range->type == "constRange"){
-            return llvm::ArrayType::get(this->arrayType->type->toLLVMType(),
-             this->arrayType->range->constRangeType->size());
+            return llvm::ArrayType::get(this->arrayType->type->toLLVMType(generator),
+            this->arrayType->range->constRangeType->size());
         } else {
-            return llvm::ArrayType::get(this->arrayType->type->toLLVMType(), 
+            return llvm::ArrayType::get(this->arrayType->type->toLLVMType(generator), 
             this->arrayType->range->varRangeType->size());
         }
     } else if (this->type == "constRange") {
@@ -55,16 +55,25 @@ llvm::Type* AstType::toLLVMType(){
         } else if (buildInType == "string") { 
             return TheBuilder.getInt8PtrTy();
         }
-    } else {
+    } else if (this->type == "userDefined"){
+        auto res = generator.getUserDefinedTypeByName(this->userDefineType->getName());
+        if (res->isStruct){
+            return res->defRecordType;
+        } else {
+            return res->defArrayType;
+        }
+    }
+    else
+    {
         return TheBuilder.getVoidTy();
     }
     return nullptr;
 }
 
-llvm::Constant* AstType::initValue(ConstValue *v)
+llvm::Constant* AstType::initValue(Generator & generator,ConstValue *v)
 {
     vector<llvm::Constant*> element;
-    llvm::ArrayType* arrayType;;
+    llvm::ArrayType* arrayType;
     size_t size = 0;
     if (v != nullptr){
         if (this->type == "array") {
@@ -74,9 +83,9 @@ llvm::Constant* AstType::initValue(ConstValue *v)
                 size = this->arrayType->range->varRangeType->size();
             }
             for (int i = 0; i < size; i++) {
-                element.push_back(this->arrayType->type->initValue(v));
+                element.push_back(this->arrayType->type->initValue(generator,v));
             }
-            arrayType = (llvm::ArrayType*)this->toLLVMType();
+            arrayType = (llvm::ArrayType*)this->toLLVMType(generator);
             return llvm::ConstantArray::get(arrayType, element);
         } else if (this->type == "constRange" || this->type == "varRange") {
                 return TheBuilder.getInt32(v->getValue().i);
@@ -105,9 +114,9 @@ llvm::Constant* AstType::initValue(ConstValue *v)
                 size = this->arrayType->range->varRangeType->size();
             }
             for (int i = 0; i < size; i++) {
-                element.push_back(this->arrayType->type->initValue());
+                element.push_back(this->arrayType->type->initValue(generator));
             }
-            arrayType = (llvm::ArrayType*)this->toLLVMType();
+            arrayType = (llvm::ArrayType*)this->toLLVMType(generator);
             return llvm::ConstantArray::get(arrayType, element);
         } else if (this->type == "constRange" || this->type == "varRange") {
             return TheBuilder.getInt32(0);
@@ -221,14 +230,12 @@ llvm::Value *ConstDeclaration::codeGen(Generator & generator) {
     string name = this->name->getName();
     this->type = new AstType(this->value->valueType);
     if (this->isGlobal) {
-         return new llvm::GlobalVariable(*generator.TheModule, this->type->toLLVMType(), true, llvm::GlobalValue::ExternalLinkage, this->type->initValue(this->value), name);
+         return new llvm::GlobalVariable(*generator.TheModule, this->type->toLLVMType(generator), true, llvm::GlobalValue::ExternalLinkage, this->type->initValue(generator,this->value), name);
     } else {
-        auto alloc = CreateEntryBlockAlloca(generator.funcStack.back(), name, this->type->toLLVMType());
+        auto alloc = CreateEntryBlockAlloca(generator.funcStack.back(), name, this->type->toLLVMType(generator));
         return TheBuilder.CreateStore(this->value->codeGen(generator), alloc);
     }
 }
-
-
 
 llvm::Value *AstType::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Type");
@@ -245,7 +252,7 @@ llvm::Value *AstType::codeGen(Generator & generator) {
     } else if (this->type == "userDefined") {
         this->userDefineType->codeGen(generator);
     }
-    return (llvm::Value*)this->toLLVMType();
+    return (llvm::Value*)this->toLLVMType(generator);
 }
 
 llvm::Value *EnumType::codeGen(Generator & generator) {
@@ -290,12 +297,29 @@ llvm::Value *VarRangeType::mapIndex(llvm::Value *indexValue, Generator & generat
     return BinaryOp(indexValue, "-", this->lowerValue);
 }
 
-
-
 int64_t getActualValue(llvm::Value *v) {
     llvm::Constant *constValue = llvm::cast<llvm::GlobalVariable>(v)->getInitializer();
     llvm::ConstantInt *constInt = llvm::cast<llvm::ConstantInt>(constValue);
     return constInt->getSExtValue();
+}
+
+size_t ConstRangeType::size() {
+    int s;
+    if (lowerBound->valueType == upperBound->valueType && lowerBound->isValidConstRangeType()) {
+        if (lowerBound->valueType == "integer") {
+        //    std::cout << lowerBound->getValue().i << ".." << upperBound->getValue().i << std::endl;
+            s = upperBound->getValue().i - lowerBound->getValue().i + 1;
+        } else {
+        //    std::cout << lowerBound->getValue().c << ".." << upperBound->getValue().c << std::endl;
+            s = upperBound->getValue().c - lowerBound->getValue().c + 1;
+        }
+        if (s <= 0) {
+            throw range_error("[ERROR] low > up.");
+        }
+    } else {
+        throw std::domain_error("[ERROR] Invalid range type.");
+    }
+    return s;
 }
 
 size_t VarRangeType::size() {
@@ -323,8 +347,26 @@ llvm::Value *FieldDeclaration::codeGen(Generator & generator) {
 llvm::Value *TypeDeclaration::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Type Declaration");
     string name = this->name->getName();
-    cout << name << endl;
     this->type->codeGen(generator);
+    if (this->type->type == "array")
+    {
+        int size;
+        if (this->type->arrayType->range->type == "constRange"){
+            size = this->type->arrayType->range->constRangeType->size();
+        } else {
+            size = this->type->arrayType->range->varRangeType->size();
+        }
+        // llvm::ArrayType::get(llvm::Type::getInt32Ty(*TheContext), size);
+        auto newType = llvm::ArrayType::get(TheBuilder.getInt32Ty(), size);
+        generator.typeStack.push_back(new UserDefinedType(name, newType));
+    }
+    else if (this->type->type == "record")
+    {
+    }
+    else
+    {
+    }
+    
     return nullptr;
 }
 
@@ -333,12 +375,14 @@ llvm::Value *VarDeclaration::codeGen(Generator & generator) {
     llvm::Value* alloc = nullptr;
     llvm::Type* varType;
     for (auto & id : *(this->nameList)) {
-        if (this->type->type == "array") {
+        if (this->type->type == "array"){
+            generator.arrayMap[id->getName()] = this->type->arrayType;
+        } else if (this->type->type == "userDefined") {
             generator.arrayMap[id->getName()] = this->type->arrayType;
         }
         varType = (llvm::Type*)(this->type->codeGen(generator));
         if (this->isGlobal) {
-            alloc = new llvm::GlobalVariable(*generator.TheModule, varType, false, llvm::GlobalValue::ExternalLinkage, this->type->initValue(), id->getName());
+            alloc = new llvm::GlobalVariable(*generator.TheModule, varType, false, llvm::GlobalValue::ExternalLinkage, this->type->initValue(generator), id->getName());
         } else {
             alloc = CreateEntryBlockAlloca(generator.funcStack.back(), id->getName(), varType);
         }
@@ -354,10 +398,10 @@ llvm::Value *FuncDeclaration::codeGen(Generator & generator) {
         if (argType->isVar) {
             argTypes.insert(argTypes.end(), argType->nameList->size(), toLLVMPtrType(argType->getType()->buildInType));
         } else {
-            argTypes.insert(argTypes.end(), argType->nameList->size(), argType->getType()->toLLVMType());
+            argTypes.insert(argTypes.end(), argType->nameList->size(), argType->getType()->toLLVMType(generator));
         }
     }
-    llvm::FunctionType *funcType = llvm::FunctionType::get(this->returnType->toLLVMType(), argTypes, false);
+    llvm::FunctionType *funcType = llvm::FunctionType::get(this->returnType->toLLVMType(generator), argTypes, false);
     llvm::Function *function = llvm::Function::Create(funcType, llvm::GlobalValue::InternalLinkage, this->name->getName(), generator.TheModule.get());
     generator.pushFunction(function);
     
@@ -377,7 +421,7 @@ llvm::Value *FuncDeclaration::codeGen(Generator & generator) {
                 function->addAttribute(index, llvm::Attribute::NonNull);
                 alloc = TheBuilder.CreateGEP(argIt++, TheBuilder.getInt32(0), arg->getName());
             } else {
-                alloc = CreateEntryBlockAlloca(function, arg->getName(), args->type->toLLVMType());
+                alloc = CreateEntryBlockAlloca(function, arg->getName(), args->type->toLLVMType(generator));
                 TheBuilder.CreateStore(argIt++, alloc);
             }
             index++;
@@ -387,7 +431,7 @@ llvm::Value *FuncDeclaration::codeGen(Generator & generator) {
     //Return
     llvm::Value *res = nullptr;
     if (this->returnType->type != "void") {
-        res = CreateEntryBlockAlloca(function, this->name->getName(), this->returnType->toLLVMType());
+        res = CreateEntryBlockAlloca(function, this->name->getName(), this->returnType->toLLVMType(generator));
     }
     
     //Sub routine
