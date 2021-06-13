@@ -1,4 +1,4 @@
-program test_proc_func;
+program test_func;
 
 var
     f : real;
