@@ -1,17 +1,12 @@
 program h;
-type 
-    t = array[1..3] of integer;
+
 var 
-   // a : array[1..3] of integer;
-    a,e : t;
-    c : real;
-    //b : array[1..3] of integer;
+    a : integer;
+    e : integer;
     
 begin
-    a[2] := 5;
-    c := 5;
-   
-  // writeln(sqr(c));
-  // b[2] := 6;
+    a := 3;
+    e := sqr(a);
+    writeln(e);
 end
 .

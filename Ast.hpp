@@ -1,5 +1,5 @@
-#ifndef AST_H 
-#define AST_H 
+#ifndef AST_HPP
+#define AST_HPP  
 
 #include <llvm/IR/Value.h> 
 #include <llvm/IR/DerivedTypes.h>
@@ -20,21 +20,21 @@ class Integer;
 class Real;
 class Char;
 class Boolean;
-class Stirng;
+class String;
 class ConstValue;
 class Identifier;
 class ConstDeclaration;
 class TypeDeclaration;
 class VarDeclaration;
-class AstType;
+class AbstractType;
 class EnumType;
-class AstArrayType;
+class AbstractArray;
 class RecordType;
 class ConstRangeType;
 class VarRangeType;
 class FieldDeclaration;
 class FuncDeclaration;
-class Parameter;
+class Params;
 class Routine;
 class Program;
 class UserDefinedType;
@@ -42,10 +42,10 @@ class AssignStatement;
 class BinaryExpression;
 class ArrayReference;
 class RecordReference;
-class FunctionCall;
-class SysFunctionCall;
-class ProcedureCall;
-class SysProcedureCall;
+class UserFunction;
+class SystemFunction;
+class UserProcedure;
+class SystemProcedure;
 class IfStatement;
 class RepeatStatement;
 class WhileStatement;
@@ -55,21 +55,22 @@ class CaseExpression;
 class GotoStatement;
 class CompoundStatement;
 
-using ExpressionList = vector<Expression *>;
-using StatementList = vector<Statement *>;
-using ConstDeclList = vector<ConstDeclaration *>;
-using VarDeclList = vector<VarDeclaration *>;
-using TypeDeclList = vector<TypeDeclaration *>;
-using NameList = vector<Identifier *>;
-using FieldList = vector<FieldDeclaration *>;
-using ParaList = vector<Parameter *>;
-using RoutineList = vector<FuncDeclaration *>;
-using StatementList = vector<Statement *>;
-using ArgsList = vector<Expression *>;
-using CaseExprList = vector<CaseExpression *>;
+using ExpressionVector = vector<Expression *>;
+using StatementVector = vector<Statement *>;
+using ConstDeclVector = vector<ConstDeclaration *>;
+using VarDeclVector = vector<VarDeclaration *>;
+using TypeDeclVector = vector<TypeDeclaration *>;
+using NameVector = vector<Identifier *>;
+using FieldVector = vector<FieldDeclaration *>;
+using ParaVector = vector<Params *>;
+using RoutineVector = vector<FuncDeclaration *>;
+using StatementVector = vector<Statement *>;
+using ParamsVector = vector<Expression *>;
+using CaseExprVector = vector<CaseExpression *>;
 
 // base node
-class Node{
+class Node
+{
 public:
     // generate intermediate code for llvm
     virtual llvm::Value *codeGen(Generator & generator) = 0;
@@ -82,18 +83,18 @@ public:
 
 
 // expression: doesn't support goto
-class Expression : public Node {};
+class Expression : public Node 
+{
+
+};
 
 // identifier
-class Identifier : public Expression{
+class Identifier : public Expression
+{
 public:
     string *name;
 
     Identifier(string *name) : name(name) { }
-
-    string getName() {
-        return *name;
-    }
     
     virtual string jsonGen() override;
     
@@ -101,7 +102,8 @@ public:
 };
 
 // const value
-class ConstValue : public Expression{
+class ConstValue : public Expression
+{
 public:
     union Value {
         int i;
@@ -121,7 +123,8 @@ public:
     }
 };
 
-class Integer : public ConstValue{
+class Integer : public ConstValue
+{
 public:
     int value;
     Integer(int value) : value(value) {
@@ -143,7 +146,8 @@ public:
     virtual string jsonGen() override;
 };
 
-class Real : public ConstValue{
+class Real : public ConstValue
+{
 public:
     double value;
     Real(double value) : value(value) {
@@ -165,7 +169,8 @@ public:
     virtual string jsonGen() override;
 };
 
-class Char : public ConstValue{
+class Char : public ConstValue
+{
 public:
     char value;
     Char(char value) : value(value) { 
@@ -187,7 +192,8 @@ public:
     virtual string jsonGen() override;
 };
 
-class String : public ConstValue{
+class String : public ConstValue
+{
 public:
     string* value;
     String(string* value) : value(value) { 
@@ -209,7 +215,8 @@ public:
     virtual string jsonGen() override;
 };
 
-class Boolean : public ConstValue{
+class Boolean : public ConstValue
+{
 public:
     bool value;
     Boolean(bool value) : value(value) { 
@@ -232,7 +239,8 @@ public:
 };
 
 // statement: support goto
-class Statement : public Node {
+class Statement : public Node 
+{
 public:
     llvm::BasicBlock *nextBlock;
     int label = -1; // default, not set by user
@@ -250,11 +258,12 @@ public:
 };
 
 // declare const value
-class ConstDeclaration : public Statement{
+class ConstDeclaration : public Statement
+{
 public:
     Identifier *name;
     ConstValue *value;
-    AstType *type;
+    AbstractType *type;
     bool isGlobal;
     ConstDeclaration(Identifier *ip, ConstValue *cp) : name(ip), value(cp), isGlobal(false) { }
 
@@ -267,18 +276,20 @@ public:
     }
 };
 
-class EnumType : public Statement {
+class EnumType : public Statement 
+{
 public:
-    NameList *enumList;
+    NameVector *enumVector;
 
-    EnumType(NameList *i) : enumList(i) { }
+    EnumType(NameVector *i) : enumVector(i) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
     
     virtual string jsonGen() override;
 };
 
-class ConstRangeType : public Statement {
+class ConstRangeType : public Statement 
+{
 public:
     ConstValue *lowerBound, *upperBound;
     llvm::Value *lowerValue, *upperValue;
@@ -294,7 +305,8 @@ public:
     llvm::Value *mapIndex(llvm::Value* indexValue, Generator& generator);
 };
 
-class VarRangeType : public Statement {
+class VarRangeType : public Statement 
+{
 public:
     Identifier *lowerBound , *upperBound;
     llvm::Value *lowerValue, *upperValue, *lowerValueAddr, *upperValueAddr;
@@ -310,12 +322,13 @@ public:
     size_t size();
 };
 
-class FieldDeclaration : public Statement {
+class FieldDeclaration : public Statement 
+{
 public:
-    NameList *nameList;
-    AstType *type;
+    NameVector *nameVector;
+    AbstractType *type;
 
-    FieldDeclaration(NameList *nameList, AstType *td) : nameList(nameList), type(td) { }
+    FieldDeclaration(NameVector *nameVector, AbstractType *td) : nameVector(nameVector), type(td) { }
     
     virtual llvm::Value *codeGen(Generator & generator) override;
     
@@ -325,45 +338,23 @@ public:
 class RecordType : public Statement 
 {
 public:
-    FieldList *fieldList;
+    FieldVector *fieldVector;
     
-    RecordType(FieldList *fl) : fieldList(fl) { }
+    RecordType(FieldVector *fl) : fieldVector(fl) { }
     
     virtual llvm::Value *codeGen(Generator & generator) override;
     
     virtual string jsonGen() override;
 };
 
-class UserDefinedType {
-public:
-    string name;
-    bool isStruct;
-    size_t size;
-    vector<string> typeVec;
-    llvm::ArrayType *defArrayType;
-    llvm::StructType *defRecordType;
-    UserDefinedType(string name, llvm::ArrayType *defArrayType, vector<string> typeVec ):
-        name(name), defArrayType(defArrayType), typeVec(typeVec) {
-            this->isStruct = false;
-            this->size = typeVec.size();
-    }
-
-    UserDefinedType(string name, llvm::StructType *defRecordType, vector<string> typeVec ):
-        name(name), defRecordType(defRecordType), typeVec(typeVec) {
-            this->isStruct = true;
-            this->size = typeVec.size();
-    }
-
-};
-
 // the concrete defined ways for array type : const..const or name..name
-class AstArrayType : public Statement {
+class AbstractArray : public Statement {
 public:
     //eg: in:  array[1..3] of integer 
     //             *range*     *type*
-    AstType *type, *range;
+    AbstractType *type, *range;
 
-    AstArrayType(AstType *type, AstType *range) : type(type), range(range) { }
+    AbstractArray(AbstractType *type, AbstractType *range) : type(type), range(range) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
     
@@ -371,11 +362,12 @@ public:
 };
 
 // abstract type
-class AstType : public Statement {
+class AbstractType : public Statement 
+{
 public:
     string type;
     string buildInType;
-    AstArrayType *arrayType;
+    AbstractArray *arrayType;
     RecordType *recordType;
     EnumType *enumType;
     ConstRangeType *constRangeType;
@@ -383,14 +375,14 @@ public:
     Identifier *userDefineType;
     
 
-    AstType(AstArrayType *i) : arrayType(i), type("array") { }
-    AstType(RecordType *i) : recordType(i), type("record") { }
-    AstType(EnumType *i) : enumType(i), type("enum") { }
-    AstType(ConstRangeType *i) : constRangeType(i), type("constRange") { }
-    AstType(VarRangeType *i) : varRangeType(i), type("varRange") { }
-    AstType(string buildIn) : buildInType(buildIn), type("builtin") { }
-    AstType(Identifier *i) : userDefineType(i), type("userDefined") { }
-    AstType() : type("void") { }
+    AbstractType(AbstractArray *i) : arrayType(i), type("array") { }
+    AbstractType(RecordType *i) : recordType(i), type("record") { }
+    AbstractType(EnumType *i) : enumType(i), type("enum") { }
+    AbstractType(ConstRangeType *i) : constRangeType(i), type("constRange") { }
+    AbstractType(VarRangeType *i) : varRangeType(i), type("varRange") { }
+    AbstractType(string buildIn) : buildInType(buildIn), type("builtin") { }
+    AbstractType(Identifier *i) : userDefineType(i), type("userDefined") { }
+    AbstractType() : type("void") { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
     virtual string jsonGen() override;
@@ -400,23 +392,25 @@ public:
     llvm::Constant *initValue(Generator &generator, ConstValue *v = nullptr);
 };
 
-class TypeDeclaration : public Statement {
+class TypeDeclaration : public Statement 
+{
 public:
     Identifier *name;
-    AstType *type;
+    AbstractType *type;
     virtual llvm::Value *codeGen(Generator & generator) override;
 
-    TypeDeclaration(Identifier *name, AstType *type) : name(name), type(type) { }
+    TypeDeclaration(Identifier *name, AbstractType *type) : name(name), type(type) { }
     
     virtual string jsonGen() override;
 };
 
-class VarDeclaration : public Statement {
+class VarDeclaration : public Statement 
+{
 public:
-    NameList *nameList;
-    AstType *type;
+    NameVector *nameVector;
+    AbstractType *type;
     bool isGlobal;
-    VarDeclaration(NameList *nl, AstType *td) : nameList(nl), type(td), isGlobal(false) {}
+    VarDeclaration(NameVector *nl, AbstractType *td) : nameVector(nl), type(td), isGlobal(false) {}
     
     virtual llvm::Value *codeGen(Generator & generator) override;
 
@@ -427,20 +421,51 @@ public:
     }
 };
 
-class FuncDeclaration : public Statement {
+
+
+class UserDefinedType 
+{
+public:
+    string name;
+    bool isStruct;
+    size_t size;
+    vector<string> typeVec;
+    llvm::ArrayType *defArrayType;
+    llvm::StructType *defRecordType;
+    AbstractType *range;
+    UserDefinedType(string name, llvm::ArrayType *defArrayType, vector<string> typeVec, AbstractArray *ast)
+     : name(name), defArrayType(defArrayType), typeVec(typeVec)
+        {
+            this->isStruct = false;
+            this->size = typeVec.size();
+            this->range = ast->range;
+        }
+
+    UserDefinedType(string name, llvm::StructType *defRecordType, vector<string> typeVec, AbstractArray *ast ):
+        name(name), defRecordType(defRecordType), typeVec(typeVec) 
+        {
+            this->isStruct = true;
+            this->size = typeVec.size();
+            this->range = ast->range;
+        }
+};
+
+
+class FuncDeclaration : public Statement 
+{
 public: 
     Identifier *name;
-    ParaList *paraList;
-    AstType *returnType;
+    ParaVector *paraVector;
+    AbstractType *returnType;
     Routine *subRoutine;
 
-    FuncDeclaration(Identifier *name, ParaList *paraList, AstType *returnType) : 
-        name(name), paraList(paraList), returnType(returnType) {
+    FuncDeclaration(Identifier *name, ParaVector *paraVector, AbstractType *returnType) : 
+        name(name), paraVector(paraVector), returnType(returnType) {
 
     }
 
-    FuncDeclaration(Identifier *name, ParaList *paraList) : name(name), paraList(paraList) {
-        returnType = new AstType();
+    FuncDeclaration(Identifier *name, ParaVector *paraVector) : name(name), paraVector(paraVector) {
+        returnType = new AbstractType();
     }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
@@ -452,19 +477,16 @@ public:
     virtual string jsonGen() override;
 };
 
-class Parameter : public Statement {
+class Params : public Statement 
+{
 public:
     bool isVar;
-    NameList *nameList;
-    AstType *type;
-    Parameter(NameList *nl, bool isVar) : nameList(nl), isVar(isVar) { }
+    NameVector *nameVector;
+    AbstractType *type;
+    Params(NameVector *nl, bool isVar) : nameVector(nl), isVar(isVar) { }
     
-    void setType(AstType *type) {
+    void setType(AbstractType *type) {
         this->type = type;
-    }
-
-    AstType* getType() {
-        return type;
     }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
@@ -472,16 +494,17 @@ public:
     virtual string jsonGen() override;
 };
 
-class Routine : public Node {
+class Routine : public Node 
+{
 public:
-    ConstDeclList *constDeclList;
-    TypeDeclList *typeDeclList;
-    VarDeclList *varDeclList;
-    RoutineList *routineList;
+    ConstDeclVector *constDeclVector;
+    TypeDeclVector *typeDeclVector;
+    VarDeclVector *varDeclVector;
+    RoutineVector *routineVector;
     CompoundStatement *routineBody;
 
-    Routine(ConstDeclList *cd, TypeDeclList *tp, VarDeclList *vd, RoutineList *rl) : 
-        constDeclList(cd), varDeclList(vd), typeDeclList(tp), routineList(rl) {
+    Routine(ConstDeclVector *cd, TypeDeclVector *tp, VarDeclVector *vd, RoutineVector *rl) : 
+        constDeclVector(cd), varDeclVector(vd), typeDeclVector(tp), routineVector(rl) {
 
     }
 
@@ -492,16 +515,17 @@ public:
     virtual string jsonGen() override;
     
     void setGlobal() {
-        for (auto & constDecl : *constDeclList) {
+        for (auto & constDecl : *constDeclVector) {
             constDecl->setGlobal();
         }
-        for (auto & varDecl : *varDeclList) {
+        for (auto & varDecl : *varDeclVector) {
             varDecl->setGlobal();
         }
     }
 };
 
-class Program : public Node {
+class Program : public Node 
+{
 public:
     string *programID;
     Routine *routine;
@@ -514,16 +538,15 @@ public:
 class AssignStatement : public Statement 
 {
 public:
-
-    Identifier *lhs;
-    Expression *rhs;
-    Expression *sub;
+    Identifier *targetVar;
+    Expression *targetValue;
+    Expression *index;
     Identifier *field;
     string assignType;
 
-    AssignStatement(Identifier *lhs, Expression *rhs) : lhs(lhs), rhs(rhs), assignType("identifier") { }
-    AssignStatement(Identifier *lhs, Expression *sub, Expression *rhs) : lhs(lhs), sub(sub), rhs(rhs), assignType("array") { }
-    AssignStatement(Identifier *lhs, Identifier *field, Expression *rhs) : lhs(lhs), field(field), rhs(rhs), assignType("record") { }
+    AssignStatement(Identifier *targetVar, Expression *targetValue) : targetVar(targetVar), targetValue(targetValue), assignType("identifier") { }
+    AssignStatement(Identifier *targetVar, Expression *index, Expression *targetValue) : targetVar(targetVar), index(index), targetValue(targetValue), assignType("array") { }
+    AssignStatement(Identifier *targetVar, Identifier *field, Expression *targetValue) : targetVar(targetVar), field(field), targetValue(targetValue), assignType("record") { }
     
     virtual llvm::Value *codeGen(Generator & generator) override;
     virtual string jsonGen() override;
@@ -569,40 +592,40 @@ public:
     virtual string jsonGen() override;
 };
 
-class FunctionCall : public Expression, public Statement
+class UserFunction : public Expression, public Statement
 {
 public:
     Identifier *function;
-    ArgsList *args;
+    ParamsVector *args;
 
-    FunctionCall(Identifier *name) : function(name), args(new ArgsList()) { }
-    FunctionCall(Identifier *name, ArgsList *args) : function(name), args(args) { }
+    UserFunction(Identifier *name) : function(name), args(new ParamsVector()) { }
+    UserFunction(Identifier *name, ParamsVector *args) : function(name), args(args) { }
     
     virtual llvm::Value *codeGen(Generator & generator) override;
     virtual string jsonGen() override;
 };
 
-class ProcedureCall : public Statement 
+class UserProcedure : public Statement 
 {
 public:
     Identifier *funcName;
-    ArgsList *args;
+    ParamsVector *args;
 
-    ProcedureCall(Identifier *name) : funcName(name), args(new ArgsList()) { }
-    ProcedureCall(Identifier *name, ArgsList *args) : funcName(name), args(args) { }
+    UserProcedure(Identifier *name) : funcName(name), args(new ParamsVector()) { }
+    UserProcedure(Identifier *name, ParamsVector *args) : funcName(name), args(args) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
     virtual string jsonGen() override;
 };
 
-class SysFunctionCall : public Expression, public Statement
+class SystemFunction : public Expression, public Statement
 {
 public:
-    ArgsList *args;
+    ParamsVector *args;
     string funcName;
 
-    SysFunctionCall(string name) : funcName(name) {}
-    SysFunctionCall(string name, ArgsList *args) : funcName(name), args(args) {  }
+    SystemFunction(string name) : funcName(name) {}
+    SystemFunction(string name, ParamsVector *args) : funcName(name), args(args) {  }
 
     virtual string jsonGen() override;
     virtual llvm::Value *codeGen(Generator & generator) override;
@@ -619,36 +642,17 @@ public:
 
 };
 
-class SysProcedureCall : public Statement {
+class SystemProcedure : public Statement 
+{
 public:
-    enum SysProcedure {
-        SPL_WRITE,
-        SPL_WRITELN,
-        SPL_READ,
-        SPL_ERROR_PROCEDURE
-    };
-
-    SysProcedure getProcedure(string *name) {
-        string &sname = *name;
-        if(sname == "write")
-            return SPL_WRITE;
-        else if(sname == "writeln")
-            return SPL_WRITELN;
-        else if(sname == "read")
-            return SPL_READ;
-        else
-            return SPL_ERROR_PROCEDURE;
-    }
-
-    SysProcedure procedure;
-    ArgsList *args;
+    ParamsVector *args;
     string *name;
 
-    SysProcedureCall(string *name) : procedure(getProcedure(name)), name(name) {
-        args = new ArgsList(); 
+    SystemProcedure(string *name) : name(name) {
+        args = new ParamsVector(); 
     }
-    SysProcedureCall(string *name, ArgsList *args) : procedure(getProcedure(name)), args(args), name(name) { }
-    SysProcedureCall(string *name, Expression *expr) : procedure(getProcedure(name)), args(new ArgsList()), name(name) {
+    SystemProcedure(string *name, ParamsVector *args) : args(args), name(name) { }
+    SystemProcedure(string *name, Expression *expr) : args(new ParamsVector()), name(name) {
         args->push_back(expr);
     }
 
@@ -677,9 +681,9 @@ public:
 class RepeatStatement : public Statement {
 public:
     Expression *condition;
-    StatementList *repeatStatement;
+    StatementVector *repeatStatement;
 
-    RepeatStatement(Expression *condition, StatementList *stmtList) : condition(condition), repeatStatement(stmtList) {
+    RepeatStatement(Expression *condition, StatementVector *stmtVector) : condition(condition), repeatStatement(stmtVector) {
 
     }
 
@@ -724,9 +728,9 @@ class CaseStatement : public Statement
 {
 public:
     Expression *value;
-    CaseExprList *caseExprList;
+    CaseExprVector *caseExprVector;
 
-    CaseStatement(Expression *value, CaseExprList *caseExprList) : value(value), caseExprList(caseExprList) { }
+    CaseStatement(Expression *value, CaseExprVector *caseExprVector) : value(value), caseExprVector(caseExprVector) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
     virtual string jsonGen() override;   
@@ -757,9 +761,9 @@ public:
 class CompoundStatement : public Statement 
 {
 public:
-    StatementList *stmtList;
+    StatementVector *stmtVector;
     
-    CompoundStatement(StatementList *stmtList) : stmtList(stmtList) { }
+    CompoundStatement(StatementVector *stmtVector) : stmtVector(stmtVector) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
     virtual string jsonGen() override;

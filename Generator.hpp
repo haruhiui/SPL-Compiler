@@ -1,14 +1,22 @@
-#ifndef GENERATOR_H
-#define GENERATOR_H
+#ifndef GENERATOR_HPP 
+#define GENERATOR_HPP
 
 #include <iostream>
 #include <vector>
 #include <map>
 #include <string>
 
+#include <llvm/ADT/APFloat.h>
+#include <llvm/ADT/Optional.h>
+#include <llvm/ADT/STLExtras.h>
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Function.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/IR/Type.h>
+#include <llvm/IR/Verifier.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/CallingConv.h>
@@ -24,21 +32,13 @@
 #include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/ManagedStatic.h>
 #include <llvm/Support/TargetSelect.h>
+#include <llvm/Support/FileSystem.h>
+#include <llvm/Support/Host.h> 
+#include <llvm/Support/TargetRegistry.h>
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/DynamicLibrary.h>
 #include <llvm/Target/TargetMachine.h>
-#include <llvm/ADT/APFloat.h>
-#include <llvm/ADT/Optional.h>
-#include <llvm/ADT/STLExtras.h>
-#include <llvm/IR/Constants.h>
-#include <llvm/IR/DerivedTypes.h>
-#include <llvm/IR/Instructions.h>
-#include <llvm/IR/Type.h>
-#include <llvm/IR/Verifier.h>
-#include <llvm/Support/FileSystem.h>
-#include <llvm/Support/Host.h> 
-#include <llvm/Support/TargetRegistry.h>
 #include <llvm/Target/TargetOptions.h>
 
 static std::unique_ptr<llvm::LLVMContext> TheContext = std::make_unique<llvm::LLVMContext>();
@@ -55,7 +55,8 @@ public:
     std::vector<llvm::Function*> funcStack;
     std::vector<UserDefinedType*> typeStack;
     llvm::BasicBlock *labelBlocks[3000];
-    std::map<std::string, AstArrayType *> arrayMap;
+    std::map<std::string, AbstractArray *> arrayMap;
+    std::map<std::string, Identifier *> userMap;
 
     Generator() {
         TheModule = std::unique_ptr<llvm::Module>(new llvm::Module("main", *TheContext));

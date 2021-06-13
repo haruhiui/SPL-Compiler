@@ -31,25 +31,25 @@ Program *root;
 	ConstDeclaration *constDeclaration;
 	TypeDeclaration *typeDeclaration;
 	VarDeclaration *varDeclaration;
-	AstType *type;
+	AbstractType *type;
 	EnumType *enumType;
-	AstArrayType *AstArrayType;
+	AbstractArray *AbstractArray;
 	RecordType  *recordType;
 	ConstRangeType *constRangeType;
 	VarRangeType *VarRangeType;
 	FieldDeclaration *fieldDeclaration;
 	FuncDeclaration *funcDeclaration;
-	Parameter *parameter;
+	Params *parameter;
 	Routine *routine;
 	Program *program;
 	AssignStatement *assignStatement;
 	BinaryExpression *binaryExpression;
 	ArrayReference *arrayReference;
 	RecordReference *recordReference;
-	FunctionCall *functionCall;
-	SysFunctionCall *sysFunctionCall;
-	ProcedureCall *procedureCall;
-	SysProcedureCall *sysProcedureCall;
+	UserFunction *functionCall;
+	SystemFunction *sysFunctionCall;
+	UserProcedure *userProcedure;
+	SystemProcedure *systemProcedure;
 	IfStatement *ifStatement;
 	RepeatStatement *repeatStatement;
 	WhileStatement *whileStatement;
@@ -59,17 +59,17 @@ Program *root;
 	GotoStatement *gotoStatement;
 	CompoundStatement *compoundStatement;
 
-	ExpressionList *expressionList;
-	StatementList *statementList;
-	ConstDeclList *constDeclList;
-	VarDeclList *varDeclList;
-	TypeDeclList *typeDeclList;
-	NameList *nameList;
-	FieldList *fieldList;
-	ParaList *paraList;
-	RoutineList *routineList;
-	ArgsList *argsList;
-	CaseExprList *caseExprList;
+	ExpressionVector *expressionVector;
+	StatementVector *statementVector;
+	ConstDeclVector *constDeclVector;
+	VarDeclVector *varDeclVector;
+	TypeDeclVector *typeDeclVector;
+	NameVector *nameVector;
+	FieldVector *fieldVector;
+	ParaVector *paraVector;
+	RoutineVector *routineVector;
+	ParamsVector *paramsVector;
+	CaseExprVector *caseExprVector;
 	
 }
 
@@ -93,36 +93,36 @@ Program *root;
 %type<program>					program
 %type<sVal>						program_head
 %type<routine>					routine routine_head sub_routine
-%type<constDeclList>			const_part const_expr_list
-%type<typeDeclList>				type_part type_decl_list
+%type<constDeclVector>			const_part const_expr_list
+%type<typeDeclVector>			type_part type_decl_list
 %type<typeDeclaration>			type_definition
-%type<varDeclList>				var_part var_decl_list
+%type<varDeclVector>			var_part var_decl_list
 %type<varDeclaration>			var_decl
-%type<routineList>				routine_part
+%type<routineVector>			routine_part
 %type<constValue>				const_value
 %type<type>						type_decl simple_type_decl array_type_decl record_type_decl
-%type<nameList>					name_list
-%type<fieldList>				field_decl_list
+%type<nameVector>				name_list
+%type<fieldVector>				field_decl_list
 %type<fieldDeclaration>			field_decl
 %type<funcDeclaration>			function_decl procedure_decl function_head procedure_head
-%type<paraList>					parameters para_decl_list
+%type<paraVector>				parameters para_decl_list
 %type<parameter>				para_type_list var_para_list val_para_list
 %type<statement>				stmt non_label_stmt else_clause
 %type<assignStatement>			assign_stmt
 %type<statement>				proc_stmt	 
-%type<expressionList>			expression_list
+%type<expressionVector>			expression_list
 %type<expression>				expression expr term factor
-%type<argsList>					args_list 
+%type<paramsVector>				args_list 
 %type<ifStatement>				if_stmt 
 %type<repeatStatement>			repeat_stmt
 %type<whileStatement>			while_stmt
 %type<forStatement>				for_stmt
 %type<bVal>						direction
 %type<caseStatement>			case_stmt
-%type<caseExprList>				case_expr_list
+%type<caseExprVector>			case_expr_list
 %type<caseExpression>			case_expr
 %type<gotoStatement>			goto_stmt
-%type<statementList>			stmt_list
+%type<statementVector>			stmt_list
 %type<compoundStatement>		routine_body compound_stmt 
 
 
@@ -174,7 +174,7 @@ const_part
 	}
 	| /* empty */
 	{ 
-		$$ = new ConstDeclList(); 
+		$$ = new ConstDeclVector(); 
 	}
 	;
 
@@ -186,7 +186,7 @@ const_expr_list
 	}
 	| name EQUAL const_value SEMI
 	{ 
-		$$ = new ConstDeclList(); 
+		$$ = new ConstDeclVector(); 
 		$$->push_back(new ConstDeclaration($1, $3)); 
 	}
 	;
@@ -228,7 +228,7 @@ type_part
 	}
 	| /* empty */
 	{ 
-		$$ = new TypeDeclList(); 
+		$$ = new TypeDeclVector(); 
 	}
 	;
 
@@ -240,7 +240,7 @@ type_decl_list
 	}
 	| type_definition
 	{ 
-		$$ = new TypeDeclList(); 
+		$$ = new TypeDeclVector(); 
 		$$->push_back($1); 
 	}
 	;
@@ -270,45 +270,45 @@ type_decl
 simple_type_decl 
 	: SYS_TYPE
 	{
-		$$ = new AstType(*$1);
+		$$ = new AbstractType(*$1);
 	}
 	| name
 	{ 
-		$$ = new AstType($1); 
+		$$ = new AbstractType($1); 
 	}
 	| LP name_list RP
 	{ 
-		$$ = new AstType(new EnumType($2)); 
+		$$ = new AbstractType(new EnumType($2)); 
 	}
 	| const_value DOTDOT const_value
 	{ 
-		$$ = new AstType(new ConstRangeType($1, $3)); 
+		$$ = new AbstractType(new ConstRangeType($1, $3)); 
 	}
 	| MINUS const_value DOTDOT const_value
 	{ 
-		$$ = new AstType(new ConstRangeType(-*$2, $4)); 
+		$$ = new AbstractType(new ConstRangeType(-*$2, $4)); 
 	}
 	| MINUS const_value DOTDOT MINUS const_value
 	{ 
-		$$ = new AstType(new ConstRangeType(-*$2, -*$5)); 
+		$$ = new AbstractType(new ConstRangeType(-*$2, -*$5)); 
 	}
 	| name DOTDOT name
 	{ 
-		$$ = new AstType(new VarRangeType($1, $3)); 
+		$$ = new AbstractType(new VarRangeType($1, $3)); 
 	}
 	;
 
 array_type_decl 
 	: ARRAY LB simple_type_decl RB OF type_decl	 
 	{ 
-		$$ = new AstType(new AstArrayType($6, $3)); 
+		$$ = new AbstractType(new AbstractArray($6, $3)); 
 	}
 	;
 
 record_type_decl 
 	: RECORD field_decl_list END 
 	{ 
-		$$ = new AstType(new RecordType($2)); 
+		$$ = new AbstractType(new RecordType($2)); 
 	}
 	;
 
@@ -319,7 +319,7 @@ field_decl_list
 	}
 	| field_decl
 	{ 
-		$$ = new FieldList(); $$->push_back($1); 
+		$$ = new FieldVector(); $$->push_back($1); 
 	}
 	;
 
@@ -337,7 +337,7 @@ name_list
 	}
 	| name
 	{ 
-		$$ = new NameList(); $$->push_back($1); 
+		$$ = new NameVector(); $$->push_back($1); 
 	}
 	;
 
@@ -348,7 +348,7 @@ var_part
 	}
 	| /* empty */
 	{ 
-		$$ = new VarDeclList(); 
+		$$ = new VarDeclVector(); 
 	}
 	;
 
@@ -359,7 +359,7 @@ var_decl_list
 	}
 	| var_decl
 	{ 
-		$$ = new VarDeclList(); $$->push_back($1); 
+		$$ = new VarDeclVector(); $$->push_back($1); 
 	}
 	;
 
@@ -383,17 +383,17 @@ routine_part
 	}
 	| function_decl
 	{ 
-		$$ = new RoutineList(); 
+		$$ = new RoutineVector(); 
 		$$->push_back($1); 
 	}
 	| procedure_decl
 	{ 
-		$$ = new RoutineList(); 
+		$$ = new RoutineVector(); 
 		$$->push_back($1); 
 	}
 	| /* empty */
 	{ 
-		$$ = new RoutineList(); 
+		$$ = new RoutineVector(); 
 	}
 	;
 
@@ -415,7 +415,8 @@ function_head
 procedure_decl 
 	: procedure_head SEMI sub_routine SEMI
 	{ 
-		$$ = $1; $$->setRoutine($3); 
+		$$ = $1; 
+		$$->setRoutine($3); 
 	}
 	;
 
@@ -433,7 +434,7 @@ parameters
 	}
 	| /* empty */
 	{ 
-		$$ = new ParaList(); 
+		$$ = new ParaVector(); 
 	}
 	;
 
@@ -444,7 +445,7 @@ para_decl_list
 	}
 	| para_type_list
 	{ 
-		$$ = new ParaList(); 
+		$$ = new ParaVector(); 
 		$$->push_back($1); 
 	}
 	;
@@ -465,14 +466,14 @@ para_type_list
 var_para_list 
 	: VAR name_list
 	{ 
-		$$ = new Parameter($2, true); 
+		$$ = new Params($2, true); 
 	}
 	;
 
 val_para_list 
 	: name_list
 	{ 
-		$$ = new Parameter($1, false); 
+		$$ = new Params($1, false); 
 	}
 	;
 
@@ -505,7 +506,7 @@ stmt_list
 	}
 	| /* empty */
 	{ 
-		$$ = new StatementList(); 
+		$$ = new StatementVector(); 
 	}
 	;
 
@@ -578,23 +579,23 @@ assign_stmt
 proc_stmt 
 	: name
 	{ 
-		$$ = new ProcedureCall($1); 
+		$$ = new UserProcedure($1); 
 	}
 	| name LP args_list RP
 	{ 
-		$$ = new ProcedureCall($1, $3); 
+		$$ = new UserProcedure($1, $3); 
 	}
 	| SYS_PROC
 	{ 
-		$$ = new SysProcedureCall($1); 
+		$$ = new SystemProcedure($1); 
 	}
 	| SYS_PROC LP expression_list RP
 	{ 
-		$$ = new SysProcedureCall($1, $3); 
+		$$ = new SystemProcedure($1, $3); 
 	}
 	| READ LP factor RP
 	{ 
-		$$ = new SysProcedureCall($1, $3); 
+		$$ = new SystemProcedure($1, $3); 
 	}
 	;
 
@@ -606,7 +607,7 @@ expression_list
 	}
 	| expression
 	{ 
-		$$ = new ExpressionList(); 
+		$$ = new ExpressionVector(); 
 		$$->push_back($1); 
 	}
 	;
@@ -691,15 +692,15 @@ factor
 	}
 	| name LP args_list RP
 	{ 
-		$$ = new FunctionCall($1, $3); 
+		$$ = new UserFunction($1, $3); 
 	}
 	| SYS_FUNCT
 	{ 
-		$$ = new SysFunctionCall(*$1); 
+		$$ = new SystemFunction(*$1); 
 	}
 	| SYS_FUNCT LP args_list RP
 	{ 
-		$$ = new SysFunctionCall(*$1, $3); 
+		$$ = new SystemFunction(*$1, $3); 
 	}
 	| const_value
 	{ 
@@ -734,7 +735,7 @@ args_list
 	}
 	| expression
 	{ 
-		$$ = new ArgsList(); $$->push_back($1); 
+		$$ = new ParamsVector(); $$->push_back($1); 
 	}
 	;
 
@@ -803,7 +804,7 @@ case_expr_list
 	}
 	| case_expr
 	{ 
-		$$ = new CaseExprList(); 
+		$$ = new CaseExprVector(); 
 		$$->push_back($1); 
 	}
 	;
