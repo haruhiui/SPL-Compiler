@@ -20,7 +20,7 @@ int lineno = 0;
 	yylval.sVal = new std::string(yytext+1, yyleng-2);
 	return STRING;
 }
-	/* operator and delimeter*/
+	/* operator and delimiter*/
 "("				{ return LP; }
 ")"				{ return RP; }
 "["				{ return LB; }

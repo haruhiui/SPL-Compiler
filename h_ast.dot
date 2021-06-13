@@ -3,136 +3,52 @@ digraph "Visulization for ast of h"{
     Nodeprogram_0 [label="program"]
     Nodeprogram_0 -> NodeRoutine_1
     NodeRoutine_1 [label="Routine"]
-    NodeRoutine_1 -> NodeConstDeclList_2
-    NodeConstDeclList_2 [label="ConstDeclList"]
-    NodeRoutine_1 -> NodeVarDeclList_3
-    NodeVarDeclList_3 [label="VarDeclList"]
-    NodeVarDeclList_3 -> NodeVarDeclaration_4
-    NodeVarDeclaration_4 [label="VarDeclaration"]
-    NodeVarDeclaration_4 -> NodeType_5
-    NodeType_5 [label="Type"]
-    NodeType_5 -> NodeSYS_TYPE_6
-    NodeSYS_TYPE_6 [label="SYS_TYPE"]
-    NodeSYS_TYPE_6 -> NodeInteger_7
-    NodeInteger_7 [label="Integer"]
-    NodeVarDeclaration_4 -> NodeNameList_8
-    NodeNameList_8 [label="NameList"]
-    NodeNameList_8 -> NodeIdentifier_9
-    NodeIdentifier_9 [label="Identifier"]
-    NodeIdentifier_9 -> Nodea_10
-    Nodea_10 [label="a"]
-    NodeVarDeclList_3 -> NodeVarDeclaration_11
-    NodeVarDeclaration_11 [label="VarDeclaration"]
-    NodeVarDeclaration_11 -> NodeType_12
-    NodeType_12 [label="Type"]
-    NodeType_12 -> NodeSYS_TYPE_13
-    NodeSYS_TYPE_13 [label="SYS_TYPE"]
-    NodeSYS_TYPE_13 -> NodeReal_14
-    NodeReal_14 [label="Real"]
-    NodeVarDeclaration_11 -> NodeNameList_15
-    NodeNameList_15 [label="NameList"]
-    NodeNameList_15 -> NodeIdentifier_16
-    NodeIdentifier_16 [label="Identifier"]
-    NodeIdentifier_16 -> Nodee_17
-    Nodee_17 [label="e"]
-    NodeVarDeclList_3 -> NodeVarDeclaration_18
-    NodeVarDeclaration_18 [label="VarDeclaration"]
-    NodeVarDeclaration_18 -> NodeType_19
-    NodeType_19 [label="Type"]
-    NodeType_19 -> NodeSYS_TYPE_20
-    NodeSYS_TYPE_20 [label="SYS_TYPE"]
-    NodeSYS_TYPE_20 -> NodeChar_21
-    NodeChar_21 [label="Char"]
-    NodeVarDeclaration_18 -> NodeNameList_22
-    NodeNameList_22 [label="NameList"]
-    NodeNameList_22 -> NodeIdentifier_23
-    NodeIdentifier_23 [label="Identifier"]
-    NodeIdentifier_23 -> Noded_24
-    Noded_24 [label="d"]
-    NodeRoutine_1 -> NodeTypeDeclList_25
-    NodeTypeDeclList_25 [label="TypeDeclList"]
-    NodeRoutine_1 -> NodeRoutineDeclList_26
-    NodeRoutineDeclList_26 [label="RoutineDeclList"]
-    NodeRoutine_1 -> NodeCompoundStatement_27
-    NodeCompoundStatement_27 [label="CompoundStatement"]
-    NodeCompoundStatement_27 -> NodeAssignStatement_28
-    NodeAssignStatement_28 [label="AssignStatement"]
-    NodeAssignStatement_28 -> NodeIdentifier_29
-    NodeIdentifier_29 [label="Identifier"]
-    NodeIdentifier_29 -> Nodee_30
-    Nodee_30 [label="e"]
-    NodeAssignStatement_28 -> NodeReal_31
-    NodeReal_31 [label="Real"]
-    NodeReal_31 -> Node5DOT300000_32
-    Node5DOT300000_32 [label="5.300000"]
-    NodeCompoundStatement_27 -> NodeAssignStatement_33
-    NodeAssignStatement_33 [label="AssignStatement"]
-    NodeAssignStatement_33 -> NodeIdentifier_34
-    NodeIdentifier_34 [label="Identifier"]
-    NodeIdentifier_34 -> Nodee_35
-    Nodee_35 [label="e"]
-    NodeAssignStatement_33 -> NodeSysFunctionCall_36
-    NodeSysFunctionCall_36 [label="SysFunctionCall"]
-    NodeSysFunctionCall_36 -> NodeSysFunction_37
-    NodeSysFunction_37 [label="SysFunction"]
-    NodeSysFunction_37 -> Nodesqrt_38
-    Nodesqrt_38 [label="sqrt"]
-    NodeSysFunctionCall_36 -> NodeArgList_39
-    NodeArgList_39 [label="ArgList"]
-    NodeArgList_39 -> NodeIdentifier_40
-    NodeIdentifier_40 [label="Identifier"]
-    NodeIdentifier_40 -> Nodee_41
-    Nodee_41 [label="e"]
-    NodeCompoundStatement_27 -> NodeSysProcedureCall_42
-    NodeSysProcedureCall_42 [label="SysProcedureCall"]
-    NodeSysProcedureCall_42 -> NodeSysProcedure_43
-    NodeSysProcedure_43 [label="SysProcedure"]
-    NodeSysProcedure_43 -> Nodewriteln_44
-    Nodewriteln_44 [label="writeln"]
-    NodeSysProcedureCall_42 -> NodeArgList_45
-    NodeArgList_45 [label="ArgList"]
-    NodeArgList_45 -> NodeIdentifier_46
-    NodeIdentifier_46 [label="Identifier"]
-    NodeIdentifier_46 -> Nodee_47
-    Nodee_47 [label="e"]
-    NodeCompoundStatement_27 -> NodeAssignStatement_48
-    NodeAssignStatement_48 [label="AssignStatement"]
-    NodeAssignStatement_48 -> NodeIdentifier_49
-    NodeIdentifier_49 [label="Identifier"]
-    NodeIdentifier_49 -> Nodea_50
-    Nodea_50 [label="a"]
-    NodeAssignStatement_48 -> NodeInteger_51
-    NodeInteger_51 [label="Integer"]
-    NodeInteger_51 -> Node4_52
-    Node4_52 [label="4"]
-    NodeCompoundStatement_27 -> NodeAssignStatement_53
-    NodeAssignStatement_53 [label="AssignStatement"]
-    NodeAssignStatement_53 -> NodeIdentifier_54
-    NodeIdentifier_54 [label="Identifier"]
-    NodeIdentifier_54 -> Nodea_55
-    Nodea_55 [label="a"]
-    NodeAssignStatement_53 -> NodeSysFunctionCall_56
-    NodeSysFunctionCall_56 [label="SysFunctionCall"]
-    NodeSysFunctionCall_56 -> NodeSysFunction_57
-    NodeSysFunction_57 [label="SysFunction"]
-    NodeSysFunction_57 -> Nodesqr_58
-    Nodesqr_58 [label="sqr"]
-    NodeSysFunctionCall_56 -> NodeArgList_59
-    NodeArgList_59 [label="ArgList"]
-    NodeArgList_59 -> NodeIdentifier_60
-    NodeIdentifier_60 [label="Identifier"]
-    NodeIdentifier_60 -> Nodea_61
-    Nodea_61 [label="a"]
-    NodeCompoundStatement_27 -> NodeSysProcedureCall_62
-    NodeSysProcedureCall_62 [label="SysProcedureCall"]
-    NodeSysProcedureCall_62 -> NodeSysProcedure_63
-    NodeSysProcedure_63 [label="SysProcedure"]
-    NodeSysProcedure_63 -> Nodewriteln_64
-    Nodewriteln_64 [label="writeln"]
-    NodeSysProcedureCall_62 -> NodeArgList_65
-    NodeArgList_65 [label="ArgList"]
-    NodeArgList_65 -> NodeIdentifier_66
-    NodeIdentifier_66 [label="Identifier"]
-    NodeIdentifier_66 -> Nodea_67
-    Nodea_67 [label="a"]
+    NodeRoutine_1 -> NodeVarDeclList_2
+    NodeVarDeclList_2 [label="VarDeclList"]
+    NodeVarDeclList_2 -> NodeVarDeclaration_3
+    NodeVarDeclaration_3 [label="VarDeclaration"]
+    NodeVarDeclaration_3 -> NodeType_4
+    NodeType_4 [label="Type"]
+    NodeType_4 -> NodeSYS_TYPE_5
+    NodeSYS_TYPE_5 [label="SYS_TYPE"]
+    NodeSYS_TYPE_5 -> NodeInteger_6
+    NodeInteger_6 [label="Integer"]
+    NodeVarDeclaration_3 -> NodeNameList_7
+    NodeNameList_7 [label="NameList"]
+    NodeNameList_7 -> NodeIdentifier_8
+    NodeIdentifier_8 [label="Identifier"]
+    NodeIdentifier_8 -> Nodea_9
+    Nodea_9 [label="a"]
+    NodeRoutine_1 -> NodeCompoundStatement_10
+    NodeCompoundStatement_10 [label="CompoundStatement"]
+    NodeCompoundStatement_10 -> NodeAssignStatement_11
+    NodeAssignStatement_11 [label="AssignStatement"]
+    NodeAssignStatement_11 -> NodeIdentifier_12
+    NodeIdentifier_12 [label="Identifier"]
+    NodeIdentifier_12 -> Nodea_13
+    Nodea_13 [label="a"]
+    NodeAssignStatement_11 -> NodeInteger_14
+    NodeInteger_14 [label="Integer"]
+    NodeInteger_14 -> Node5_15
+    Node5_15 [label="5"]
+    NodeCompoundStatement_10 -> NodeSysProcedureCall_16
+    NodeSysProcedureCall_16 [label="SysProcedureCall"]
+    NodeSysProcedureCall_16 -> NodeSysProcedure_17
+    NodeSysProcedure_17 [label="SysProcedure"]
+    NodeSysProcedure_17 -> Nodewriteln_18
+    Nodewriteln_18 [label="writeln"]
+    NodeSysProcedureCall_16 -> NodeArgList_19
+    NodeArgList_19 [label="ArgList"]
+    NodeArgList_19 -> NodeSysFunctionCall_20
+    NodeSysFunctionCall_20 [label="SysFunctionCall"]
+    NodeSysFunctionCall_20 -> NodeSysFunction_21
+    NodeSysFunction_21 [label="SysFunction"]
+    NodeSysFunction_21 -> Nodesqr_22
+    Nodesqr_22 [label="sqr"]
+    NodeSysFunctionCall_20 -> NodeArgList_23
+    NodeArgList_23 [label="ArgList"]
+    NodeArgList_23 -> NodeIdentifier_24
+    NodeIdentifier_24 [label="Identifier"]
+    NodeIdentifier_24 -> Nodea_25
+    Nodea_25 [label="a"]
 }

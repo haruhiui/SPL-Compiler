@@ -49,13 +49,12 @@ class Generator
 public:
     std::unique_ptr<llvm::Module> TheModule;
     unsigned int TheAddrSpace;
-    llvm::Function *mainFunction;
-    std::vector<llvm::Function*> funcStack;
-    llvm::BasicBlock* labelBlock[3000];
-    std::map<std::string, AstArrayType*> arrayMap;
-    llvm::Function *printf, *scanf;
-    llvm::Function *abs, *chr, *odd, *ord, *pred, 
+    llvm::Function *mainFunction, *printf, *scanf,
+                   *abs, *chr, *odd, *ord, *pred, 
                    *sqr, *sqrt, *succ, *sqrReal;
+    std::vector<llvm::Function*> funcStack;
+    llvm::BasicBlock* labelBlocks[3000];
+    std::map<std::string, AstArrayType*> arrayMap;
   
 
     Generator() {
@@ -65,26 +64,22 @@ public:
     
     void generate(Program& parseTreeRoot);
     
-    llvm::Value* findValue(const std::string & name) {
+    llvm::Value* getValueByName(const std::string & name) {
         llvm::Value *value = nullptr; 
-
+        // search in the most recently used ones
         for (auto it = funcStack.rbegin(); it != funcStack.rend(); it++) {
             value = (*it)->getValueSymbolTable()->lookup(name); 
             if (value != nullptr) {
                 return value; 
             } 
         }
-        
+        // search in the global values
         value = TheModule->getGlobalVariable(name); 
         if (value == nullptr) {
             throw std::logic_error("[ERROR] Undeclared variable: " + name); 
         }
 
         return value; 
-    }
-    
-    llvm::Function* getCurFunction() {
-        return funcStack.back();
     }
     
     void pushFunction(llvm::Function* func) {

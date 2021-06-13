@@ -3,37 +3,17 @@ source_filename = "main"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
 
-@a = global i32 0
-@b = global i32 0
-@c = global i32 0
-@d = global i32 0
-@e = global i32 0
-@f = global i32 0
+@ans = global i32 0
 @.str = constant [4 x i8] c"%d\0A\00"
 
 define void @main() {
 entrypoint:
-  br label %Label_1
-
-Label_1:                                          ; preds = %afterLabel_2, %entrypoint
-  store i32 5, i32* @a
-  br label %afterLabel_1
-
-afterLabel_1:                                     ; preds = %Label_1
-  store i32 6, i32* @b
-  br label %Label_2
-  store i32 7, i32* @c
-  br label %Label_2
-
-Label_2:                                          ; preds = %afterLabel_1, %afterLabel_1
-  store i32 8, i32* @d
-  br label %afterLabel_2
-
-afterLabel_2:                                     ; preds = %Label_2
-  store i32 9, i32* @e
-  %tmp = load i32, i32* @c
+  %0 = call i32 @gcd(i32 9, i32 36)
+  %1 = call i32 @gcd(i32 3, i32 6)
+  %2 = mul i32 %0, %1
+  store i32 %2, i32* @ans
+  %tmp = load i32, i32* @ans
   %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i32 0, i32 0), i32 %tmp)
-  br label %Label_1
   ret void
 }
 
@@ -113,4 +93,35 @@ define double @sqrr(double %tmpa) {
 entrypoint:
   %multmpr = fmul double %tmpa, %tmpa
   ret double %multmpr
+}
+
+define internal i32 @gcd(i32 %0, i32 %1) {
+entrypoint:
+  %gcd = alloca i32
+  %b = alloca i32
+  %a = alloca i32
+  store i32 %0, i32* %a
+  store i32 %1, i32* %b
+  %tmp = load i32, i32* %b
+  %2 = icmp eq i32 %tmp, 0
+  %ifCond = icmp ne i1 %2, false
+  br i1 %ifCond, label %then, label %else
+
+then:                                             ; preds = %entrypoint
+  %tmp1 = load i32, i32* %a
+  store i32 %tmp1, i32* %gcd
+  br label %merge
+
+else:                                             ; preds = %entrypoint
+  %tmp2 = load i32, i32* %b
+  %tmp3 = load i32, i32* %a
+  %tmp4 = load i32, i32* %b
+  %3 = srem i32 %tmp3, %tmp4
+  %4 = call i32 @gcd(i32 %tmp2, i32 %3)
+  store i32 %4, i32* %gcd
+  br label %merge
+
+merge:                                            ; preds = %else, %then
+  %tmp5 = load i32, i32* %gcd
+  ret i32 %tmp5
 }

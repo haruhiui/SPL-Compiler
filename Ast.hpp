@@ -66,54 +66,34 @@ using StatementList = vector<Statement *>;
 using ArgsList = vector<Expression *>;
 using CaseExprList = vector<CaseExpression *>;
 
-// ast node
+// base node
 class Node{
 public:
     // generate intermediate code for llvm
     virtual llvm::Value *codeGen(Generator & generator) = 0;
 
     // generate json data for visualization
-    virtual string getJson(){return "";};
+    virtual string jsonGen(){return "";};
 
     virtual ~Node() { }
 };
 
-// expression
-class Expression : public Node {
 
-};
-
-// statement
-class Statement : public Node {
-public:
-    llvm::BasicBlock *afterBB;
-    int label = -1;
-
-    // set label for goto.
-    // Note that label is set only when user defined.
-    void setLabel(int label) { this->label = label;}
-
-    // only labelled statement will actually do these
-    // Prologue will generate br label %xx and %xx:
-    void generatePrologue(Generator & generator);
-
-    // Epilogue will generate %nextxx and br %nextxx
-    void generateEpilogue(Generator & generator);
-};
+// expression: doesn't support goto
+class Expression : public Node {};
 
 // identifier
 class Identifier : public Expression{
-private:
+public:
     string *name;
 
-public:
     Identifier(string *name) : name(name) { }
 
     string getName() {
         return *name;
     }
     
-    virtual string getJson() override;
+    virtual string jsonGen() override;
     
     virtual llvm::Value *codeGen(Generator & generator) override;
 };
@@ -140,10 +120,8 @@ public:
 };
 
 class Integer : public ConstValue{
-private:
-    int value;
-
 public:
+    int value;
     Integer(int value) : value(value) {
         this->valueType = "integer"; 
     }
@@ -160,14 +138,12 @@ public:
 
     virtual llvm::Value *codeGen(Generator & generator) override;
     
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 class Real : public ConstValue{
-private:
-    double value;
-
 public:
+    double value;
     Real(double value) : value(value) {
         this->valueType = "real"; 
     }
@@ -184,14 +160,12 @@ public:
 
     virtual llvm::Value *codeGen(Generator & generator) override;
 
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 class Char : public ConstValue{
-private:
-    char value;
-
 public:
+    char value;
     Char(char value) : value(value) { 
         this->valueType = "char"; 
     }
@@ -208,14 +182,12 @@ public:
 
     virtual llvm::Value *codeGen(Generator & generator) override;
 
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 class String : public ConstValue{
-private:
-    string* value;
-
 public:
+    string* value;
     String(string* value) : value(value) { 
         this->valueType = "string"; 
     }
@@ -232,14 +204,12 @@ public:
 
     virtual llvm::Value *codeGen(Generator & generator) override;
 
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 class Boolean : public ConstValue{
-private:
-    bool value;
-
 public:
+    bool value;
     Boolean(bool value) : value(value) { 
         this->valueType = "boolean"; 
     }
@@ -256,68 +226,76 @@ public:
 
     virtual llvm::Value *codeGen(Generator & generator) override;
 
-    virtual string getJson() override;
+    virtual string jsonGen() override;
+};
+
+// statement: support goto
+class Statement : public Node {
+public:
+    llvm::BasicBlock *nextBlock;
+    int label = -1; // default, not set by user
+
+    // set label for goto.
+    // Note that label is set only when user defined.
+    void setLabel(int label) { this->label = label;}
+
+    // only labelled statement will actually do these
+    // Prologue will generate br label %xx and %xx:
+    void generatePrologue(Generator &generator);
+
+    // Epilogue will generate %nextxx and br %nextxx
+    void generateEpilogue(Generator &generator);
 };
 
 // declare const value
 class ConstDeclaration : public Statement{
-private:
+public:
     Identifier *name;
     ConstValue *value;
     AstType *type;
-    bool globalFlag;
-
-public:
-    ConstDeclaration(Identifier *ip, ConstValue *cp) : name(ip), value(cp), globalFlag(false) { }
+    bool isGlobal;
+    ConstDeclaration(Identifier *ip, ConstValue *cp) : name(ip), value(cp), isGlobal(false) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
     
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 
     void setGlobal() {
-        globalFlag = true;
-    }
-    
-    bool isGlobal() {
-        return globalFlag;
+        this->isGlobal = true;
     }
 };
 
 class EnumType : public Statement {
-private:
+public:
     NameList *enumList;
 
-public:
     EnumType(NameList *nl) : enumList(nl) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
     
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 class AstArrayType : public Statement {
 public:
-    AstType *range;
-    AstType *type;
+    AstType *range, *type;
 
     AstArrayType(AstType *type, AstType *range) : type(type), range(range) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
     
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 class ConstRangeType : public Statement {
-private:
-    ConstValue *lowBound;
-    ConstValue *upBound;
-
 public:
+    ConstValue *lowBound, *upBound;
+
     ConstRangeType(ConstValue *lowBound, ConstValue *upBound) : lowBound(lowBound), upBound(upBound) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
     
-    virtual string getJson() override;
+    virtual string jsonGen() override;
     
     size_t size() {
         int s;
@@ -342,16 +320,14 @@ public:
 };
 
 class EnumRangeType : public Statement {
-private:
-    Identifier *lowBound;
-    Identifier *upBound;
-
 public:
+    Identifier *lowBound , *upBound;
+
     EnumRangeType(Identifier *lowBound, Identifier *upBound) : lowBound(lowBound), upBound(upBound) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
     
-    virtual string getJson() override;
+    virtual string jsonGen() override;
     
     llvm::Value *lowValue, *upValue, *lowValueAddr, *upValueAddr;
     
@@ -361,29 +337,27 @@ public:
 };
 
 class FieldDeclaration : public Statement {
-private:
+public:
     NameList *nameList;
     AstType *type;
 
-public:
     FieldDeclaration(NameList *nameList, AstType *td) : nameList(nameList), type(td) { }
     
     virtual llvm::Value *codeGen(Generator & generator) override;
     
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 class RecordType : public Statement 
 {
-private:
-    FieldList *fieldList;
-
 public:
+    FieldList *fieldList;
+    
     RecordType(FieldList *fl) : fieldList(fl) { }
     
     virtual llvm::Value *codeGen(Generator & generator) override;
     
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 // abstract type
@@ -419,55 +393,46 @@ public:
     AstType() : type(SPL_VOID) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
-    virtual string getJson() override;
+    virtual string jsonGen() override;
     
     llvm::Type* toLLVMType();
     llvm::Constant* initValue(ConstValue *v = nullptr);
 };
 
 class TypeDeclaration : public Statement {
-private:
+public:
     Identifier *name;
     AstType *type;
-
-public:
     virtual llvm::Value *codeGen(Generator & generator) override;
 
     TypeDeclaration(Identifier *name, AstType *type) : name(name), type(type) { }
     
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 class VarDeclaration : public Statement {
-private:
+public:
     NameList *nameList;
     AstType *type;
-    bool globalFlag;
-
-public:
-    VarDeclaration(NameList *nl, AstType *td) : nameList(nl), type(td), globalFlag(false) {}
+    bool isGlobal;
+    VarDeclaration(NameList *nl, AstType *td) : nameList(nl), type(td), isGlobal(false) {}
     
     virtual llvm::Value *codeGen(Generator & generator) override;
 
-    virtual string getJson() override;
+    virtual string jsonGen() override;
     
     void setGlobal() {
-        globalFlag = true;
-    }
-    
-    bool isGlobal() {
-        return globalFlag;
+        this->isGlobal = true;
     }
 };
 
 class FuncDeclaration : public Statement {
-private:
+public: 
     Identifier *name;
     ParaList *paraList;
     AstType *returnType;
     Routine *subRoutine;
 
-public: 
     FuncDeclaration(Identifier *name, ParaList *paraList, AstType *returnType) : 
         name(name), paraList(paraList), returnType(returnType) {
 
@@ -483,16 +448,14 @@ public:
         subRoutine = routine;
     }
 
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 class Parameter : public Statement {
-public: 
+public:
     bool isVar;
     NameList *nameList;
     AstType *type;
-
-public:
     Parameter(NameList *nl, bool isVar) : nameList(nl), isVar(isVar) { }
     
     void setType(AstType *type) {
@@ -505,18 +468,17 @@ public:
 
     virtual llvm::Value *codeGen(Generator & generator) override;
 
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 class Routine : public Node {
-private:
+public:
     ConstDeclList *constDeclList;
     VarDeclList *varDeclList;
     TypeDeclList *typeDeclList;
     RoutineList *routineList;
     CompoundStatement *routineBody;
 
-public:
     Routine(ConstDeclList *cd, TypeDeclList *tp, VarDeclList *vd, RoutineList *rl) : 
         constDeclList(cd), varDeclList(vd), typeDeclList(tp), routineList(rl) {
 
@@ -526,7 +488,7 @@ public:
     
     virtual llvm::Value *codeGen(Generator & generator) override;
     
-    virtual string getJson() override;
+    virtual string jsonGen() override;
     
     void setGlobal() {
         for (auto & constDecl : *constDeclList) {
@@ -539,19 +501,20 @@ public:
 };
 
 class Program : public Node {
-private:
+public:
     string *programID;
     Routine *routine;
 
-public:
     Program(string *programID, Routine *routine) : programID(programID), routine(routine) { }
     virtual llvm::Value *codeGen(Generator & generator) override;
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 class AssignStatement : public Statement 
 {
 private:
+
+public:
     enum AssignType {
         ID_ASSIGN,
         ARRAY_ASSIGN,
@@ -563,38 +526,40 @@ private:
     Identifier *field;
     AssignType type;
 
-public:
     AssignStatement(Identifier *lhs, Expression *rhs) : lhs(lhs), rhs(rhs), type(ID_ASSIGN) { }
     AssignStatement(Identifier *lhs, Expression *sub, Expression *rhs) : lhs(lhs), sub(sub), rhs(rhs), type(ARRAY_ASSIGN) { }
     AssignStatement(Identifier *lhs, Identifier *field, Expression *rhs) : lhs(lhs), field(field), rhs(rhs), type(RECORD_ASSIGN) { }
     
     virtual llvm::Value *codeGen(Generator & generator) override;
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 class BinaryExpression : public Expression {
 private:
+
+public: 
     Expression *lhs;
     Expression *rhs;
     string op;
-public: 
+
     BinaryExpression(Expression *lhs, string op, Expression *rhs) : lhs(lhs), op(op), rhs(rhs) {     }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 class ArrayReference : public Expression 
 {
 private:
+
+public:
     Identifier *array;
     Expression *index;
 
-public:
     ArrayReference(Identifier *array, Expression *index) : array(array), index(index) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
-    virtual string getJson() override;
+    virtual string jsonGen() override;
     
     llvm::Value *getReference(Generator & generator);
     llvm::Type *getElementType(Generator & generator);
@@ -603,55 +568,59 @@ public:
 class RecordReference : public Expression 
 {
 private:
+
+public:
     Identifier *record;
     Identifier *field;
 
-public:
     RecordReference(Identifier *record, Identifier *field) : record(record), field(field) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 class FunctionCall : public Expression, public Statement
 {
 private:
+
+public:
     Identifier *function;
     ArgsList *args;
 
-public:
     FunctionCall(Identifier *name) : function(name), args(new ArgsList()) { }
     FunctionCall(Identifier *name, ArgsList *args) : function(name), args(args) { }
     
     virtual llvm::Value *codeGen(Generator & generator) override;
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 class ProcedureCall : public Statement 
 {
 private:
+
+public:
     Identifier *funcName;
     ArgsList *args;
 
-public:
     ProcedureCall(Identifier *name) : funcName(name), args(new ArgsList()) { }
     ProcedureCall(Identifier *name, ArgsList *args) : funcName(name), args(args) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 class SysFunctionCall : public Expression, public Statement
 {
 private:
+
+public:
     ArgsList *args;
     string funcName;
 
-public:
     SysFunctionCall(string name) : funcName(name) {}
     SysFunctionCall(string name, ArgsList *args) : funcName(name), args(args) {  }
 
-    virtual string getJson() override;
+    virtual string jsonGen() override;
     virtual llvm::Value *codeGen(Generator & generator) override;
 
     llvm::Value *SysFuncAbs(Generator & generator);
@@ -669,6 +638,9 @@ public:
 class SysProcedureCall : public Statement 
 {
 private:
+
+public:
+
     enum SysProcedure {
         SPL_WRITE,
         SPL_WRITELN,
@@ -692,7 +664,6 @@ private:
     ArgsList *args;
     string *name;
 
-public:
     SysProcedureCall(string *name) : procedure(getProcedure(name)), name(name) { }
     SysProcedureCall(string *name, ArgsList *args) : procedure(getProcedure(name)), args(args), name(name) { }
     SysProcedureCall(string *name, Expression *expr) : procedure(getProcedure(name)), args(new ArgsList()), name(name) {
@@ -700,7 +671,7 @@ public:
     }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
-    virtual string getJson() override;
+    virtual string jsonGen() override;
     
     llvm::Value *SysProcWrite(Generator & generator, bool isLineBreak);
     llvm::Value *SysProcRead(Generator & generator);
@@ -708,55 +679,52 @@ public:
 
 class IfStatement : public Statement 
 {
-private:
+public:
     Expression *condition;
     Statement *thenStatement;
     Statement *elseStatement;
 
-public:
     IfStatement(Expression *condition, Statement *thenStatement, Statement *elseStatement) : 
         condition(condition), thenStatement(thenStatement), elseStatement(elseStatement) {
 
     }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 class RepeatStatement : public Statement 
 {
-private:
+public:
     Expression *condition;
     StatementList *repeatStatement;
 
-public:
     RepeatStatement(Expression *condition, StatementList *stmtList) : condition(condition), repeatStatement(stmtList) {
 
     }
 
     virtual llvm::Value *codeGen(Generator & generator) override;    
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 class WhileStatement : public Statement 
 {
-private:
+public:
     Expression *condition;
     Statement *stmt;
 
-public:
     WhileStatement(Expression *condition, Statement *stmt) : condition(condition), stmt(stmt) {
 
     }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
-    virtual string getJson() override;
+    virtual string jsonGen() override;
     
 };
 
 class ForStatement : public Statement 
 {
-private:
+public:
     Identifier *var;
     Expression *value;
     // increase:true decrease:false
@@ -764,62 +732,58 @@ private:
     Expression *step;
     Statement *stmt;
 
-public:
     ForStatement(Identifier *var, Expression *value, bool isAdd, Expression *step, Statement *stmt) :
         var(var), value(value), isAdd(isAdd), step(step), stmt(stmt) {
 
     }
     
     virtual llvm::Value *codeGen(Generator & generator) override;
-    virtual string getJson() override;   
+    virtual string jsonGen() override;   
 };
 
 class CaseStatement : public Statement 
 {
-private:
+public:
     Expression *value;
     CaseExprList *caseExprList;
 
-public:
     CaseStatement(Expression *value, CaseExprList *caseExprList) : value(value), caseExprList(caseExprList) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
-    virtual string getJson() override;   
+    virtual string jsonGen() override;   
 };
 
 class CaseExpression : public Statement 
 {
-private:
+public:
     Statement *stmt;
 
-public:
     CaseExpression(Expression *value, Statement *stmt) : value(value), stmt(stmt) { }
     virtual llvm::Value *codeGen(Generator & generator) override;
 
-    virtual string getJson() override;
+    virtual string jsonGen() override;
     Expression *value;
 };
 
 class GotoStatement : public Statement 
 {
 public:
-    int toLabel;
-    GotoStatement(int label) : toLabel(label) { }
+    int targetLabel;
+    GotoStatement(int label) : targetLabel(label) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 class CompoundStatement : public Statement 
 {
-private:
-    StatementList *stmtList;
-
 public:
+    StatementList *stmtList;
+    
     CompoundStatement(StatementList *stmtList) : stmtList(stmtList) { }
 
     virtual llvm::Value *codeGen(Generator & generator) override;
-    virtual string getJson() override;
+    virtual string jsonGen() override;
 };
 
 

@@ -24,7 +24,7 @@ int main(int argc, char **argv)
     // generate parseTree json for visualization
     ofstream os("parseTree.json");
 
-    os << root->getJson() << endl;
+    os << root->jsonGen() << endl;
 
     Generator generator;
 

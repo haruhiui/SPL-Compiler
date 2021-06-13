@@ -73,7 +73,14 @@ python ParseTreeVisualizer.py parseTree.json
     * add: string type now available when draw pic, but something wrong with write.
 * 6.2 
     * add: able to write string variable and string constant 
+* 6.11
+    * add: able to generate all system functions
+    * feature: using Newton-Raphson method to solve sqrt
 
+## bugs 
+
+1. /tests/test_exp.spl, llc: error 
+2. 
 
 ## bug fix 
 
@@ -91,3 +98,10 @@ else
 
 * fix: div for float, including float div float, float div int, int div float 
     * Ast.cpp: 166, if one of the para is int, convert it to float 
+
+* fix: LLVM: Instruction does not dominate all uses
+    * label确定了llvm的参数域，不能跨域访问变量
+    * 使用createLoad和createStore的方法实现跨域获取变量
+
+* fix: a.out和lli output.ll 运行结果不一致
+    * 换用llvm自带的llc进行目标文件的生成

@@ -1,15 +1,8 @@
 program h;
-var
-    a,b,c,d,e,f : integer;
+var 
+    a : integer;
 begin
-
-1 : a := 5;
-    b := 6;
-    goto 2;
-    c := 7;
-2 : d := 8;
-    e := 9;
-    writeln(c);
-    goto 1;
+    a := 5;
+    writeln(sqr(a));
 end
 .

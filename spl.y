@@ -172,7 +172,7 @@ const_part
 	{ 
 		$$ = $2; 
 	}
-	| 
+	| /* empty */
 	{ 
 		$$ = new ConstDeclList(); 
 	}
@@ -218,7 +218,6 @@ const_value
 			// "maxint"
 			$$ = new Integer(0x7FFFFFFF);	
 		}
-			
 	}
 	;
 
@@ -347,7 +346,7 @@ var_part
 	{ 
 		$$ = $2; 
 	}
-	|
+	| /* empty */
 	{ 
 		$$ = new VarDeclList(); 
 	}
@@ -392,7 +391,7 @@ routine_part
 		$$ = new RoutineList(); 
 		$$->push_back($1); 
 	}
-	|
+	| /* empty */
 	{ 
 		$$ = new RoutineList(); 
 	}
@@ -432,7 +431,7 @@ parameters
 	{ 
 		$$ = $2; 
 	}
-	|
+	| /* empty */
 	{ 
 		$$ = new ParaList(); 
 	}
@@ -504,7 +503,7 @@ stmt_list
 	{ 
 		$$ = $1; $$->push_back($2); 
 	}
-	|
+	| /* empty */
 	{ 
 		$$ = new StatementList(); 
 	}

@@ -5,7 +5,7 @@ using namespace std;
 
 void echoInfo( const char* file,int line, const string & msg)
 {
-    cout << "[FILE] "<< file << " [LINE NUM] " << line << " [INFO] " << msg  << endl;
+    // cout << "[FILE] "<< file << " [LINE NUM] " << line << " [INFO] " << msg  << endl;
 }
 
 llvm::AllocaInst *CreateEntryBlockAlloca(llvm::Function *TheFunction, llvm::StringRef VarName, llvm::Type* type)
@@ -210,8 +210,8 @@ llvm::Value *BinaryOp(llvm::Value *L, string op, llvm::Value *R)
 
 llvm::Value *Identifier::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Identifier");
-//    return TheBuilder.CreateLoad(generator.findValue(*(this->name)), *(this->name));
-    return new llvm::LoadInst(generator.findValue(*(this->name)), "tmp", false, TheBuilder.GetInsertBlock());
+//    return TheBuilder.CreateLoad(generator.getValueByName(*(this->name)), *(this->name));
+    return new llvm::LoadInst(generator.getValueByName(*(this->name)), "tmp", false, TheBuilder.GetInsertBlock());
 }
 
 llvm::Value *Integer::codeGen(Generator & generator) {
@@ -245,10 +245,10 @@ llvm::Value *ConstDeclaration::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Const Declaration");
     string name = this->name->getName();
     this->type = new AstType(this->value->valueType);
-    if (this->isGlobal()) {
+    if (this->isGlobal) {
          return new llvm::GlobalVariable(*generator.TheModule, this->type->toLLVMType(), true, llvm::GlobalValue::ExternalLinkage, this->type->initValue(this->value), name);
     } else {
-        auto alloc = CreateEntryBlockAlloca(generator.getCurFunction(), name, this->type->toLLVMType());
+        auto alloc = CreateEntryBlockAlloca(generator.funcStack.back(), name, this->type->toLLVMType());
         return TheBuilder.CreateStore(this->value->codeGen(generator), alloc);
     }
 }
@@ -328,8 +328,8 @@ llvm::Value *EnumRangeType::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Enum Range Type");
     this->upValue = this->upBound->codeGen(generator);
     this->lowValue = this->lowBound->codeGen(generator);
-    this->upValueAddr = generator.findValue(this->upBound->getName());
-    this->lowValueAddr = generator.findValue(this->lowBound->getName());
+    this->upValueAddr = generator.getValueByName(this->upBound->getName());
+    this->lowValueAddr = generator.getValueByName(this->lowBound->getName());
     this->size();
     return nullptr;
 }
@@ -348,10 +348,10 @@ llvm::Value *VarDeclaration::codeGen(Generator & generator) {
             generator.arrayMap[id->getName()] = this->type->arrayType;
         }
         varType = (llvm::Type*)(this->type->codeGen(generator));
-        if (this->isGlobal()) {
+        if (this->isGlobal) {
             alloc = new llvm::GlobalVariable(*generator.TheModule, varType, false, llvm::GlobalValue::ExternalLinkage, this->type->initValue(), id->getName());
         } else {
-            alloc = CreateEntryBlockAlloca(generator.getCurFunction(), id->getName(), varType);
+            alloc = CreateEntryBlockAlloca(generator.funcStack.back(), id->getName(), varType);
         }
     }
     return alloc;
@@ -384,7 +384,7 @@ llvm::Value *FuncDeclaration::codeGen(Generator & generator) {
             llvm::Value *alloc = nullptr;
             if (args->isVar) {
                 //Check value
-//                alloc = generator.findValue(arg->getName());
+//                alloc = generator.getValueByName(arg->getName());
                 function->addAttribute(index, llvm::Attribute::NonNull);
                 alloc = TheBuilder.CreateGEP(argIt++, TheBuilder.getInt32(0), arg->getName());
             } else {
@@ -414,7 +414,7 @@ llvm::Value *FuncDeclaration::codeGen(Generator & generator) {
     
     //Pop back
     generator.popFunction();
-    TheBuilder.SetInsertPoint(&(generator.getCurFunction())->getBasicBlockList().back());
+    TheBuilder.SetInsertPoint(&(generator.funcStack.back())->getBasicBlockList().back());
     return function;
 }
 
@@ -497,7 +497,7 @@ llvm::Value *AssignStatement::codeGen(Generator & generator) {
     {
         case ID_ASSIGN: {
             llvm::Value *rhsValue = this->rhs->codeGen(generator); 
-            llvm::Value *lhsValue = generator.findValue(this->lhs->getName()); 
+            llvm::Value *lhsValue = generator.getValueByName(this->lhs->getName()); 
             res = TheBuilder.CreateStore(rhsValue, lhsValue); 
             break;
         }
@@ -528,7 +528,7 @@ llvm::Value *ArrayReference::codeGen(Generator & generator) {
 
 llvm::Value *ArrayReference::getReference(Generator & generator) {
     string name = this->array->getName();
-    llvm::Value* arrayValue = generator.findValue(name), *indexValue;
+    llvm::Value* arrayValue = generator.getValueByName(name), *indexValue;
     if (generator.arrayMap[name]->range->type == AstType::SPL_CONST_RANGE)
     {
         indexValue = generator.arrayMap[name]->range->constRangeType->mapIndex(this->index->codeGen(generator), generator);
@@ -563,7 +563,7 @@ llvm::Value *FunctionCall::codeGen(Generator & generator) {
         if (argIt->hasNonNullAttr())
         {
 //            cout << "Pass a pointer" << endl;
-            llvm::Value * addr = generator.findValue(dynamic_cast<Identifier*>(arg)->getName());
+            llvm::Value * addr = generator.getValueByName(dynamic_cast<Identifier*>(arg)->getName());
             args.push_back(addr);
         }
         else
@@ -593,7 +593,7 @@ llvm::Value *ProcedureCall::codeGen(Generator & generator) {
         if (argIt->hasNonNullAttr())
         {
 //            cout << "Pass a pointer" << endl;
-            llvm::Value * addr = generator.findValue(dynamic_cast<Identifier*>(arg)->getName());
+            llvm::Value * addr = generator.getValueByName(dynamic_cast<Identifier*>(arg)->getName());
             args.push_back(addr);
         }
         else
@@ -771,8 +771,7 @@ llvm::Value *SysProcedureCall::SysProcRead(Generator & generator)
     vector<llvm::Value*> params;
     auto arg = this->args->front();
     llvm::Value *argAddr, *argValue;
-    //Just common variable
-    argAddr = generator.findValue(dynamic_cast<Identifier*>(arg)->getName());
+    argAddr = generator.getValueByName(dynamic_cast<Identifier*>(arg)->getName());
     argValue = arg->codeGen(generator);
     if (argValue->getType() == TheBuilder.getInt32Ty())
     {
@@ -825,7 +824,7 @@ llvm::Value *IfStatement::codeGen(Generator & generator) {
     llvm::Value *condValue = this->condition->codeGen(generator), *thenValue = nullptr, *elseValue = nullptr;
     condValue = TheBuilder.CreateICmpNE(condValue, llvm::ConstantInt::get(llvm::Type::getInt1Ty(*TheContext), 0, true), "ifCond");
 
-    llvm::Function *TheFunction = generator.getCurFunction();
+    llvm::Function *TheFunction = generator.funcStack.back();
     llvm::BasicBlock *thenBB = llvm::BasicBlock::Create(*TheContext, "then", TheFunction);
     llvm::BasicBlock *elseBB = llvm::BasicBlock::Create(*TheContext, "else", TheFunction);
     llvm::BasicBlock *mergeBB = llvm::BasicBlock::Create(*TheContext, "merge", TheFunction);
@@ -857,7 +856,7 @@ llvm::Value *RepeatStatement::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Repeate Statement");
     this->generatePrologue(generator);
     
-    llvm::Function *TheFunction = generator.getCurFunction();
+    llvm::Function *TheFunction = generator.funcStack.back();
     llvm::BasicBlock *condBB = llvm::BasicBlock::Create(*TheContext, "cond", TheFunction);
     llvm::BasicBlock *loopBB = llvm::BasicBlock::Create(*TheContext, "loop", TheFunction);
     llvm::BasicBlock *afterBB = llvm::BasicBlock::Create(*TheContext, "afterLoop", TheFunction);
@@ -887,7 +886,7 @@ llvm::Value *RepeatStatement::codeGen(Generator & generator) {
 llvm::Value *WhileStatement::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"While Statement");
     this->generatePrologue(generator);
-    auto *TheFunction = generator.getCurFunction();
+    auto *TheFunction = generator.funcStack.back();
     llvm::BasicBlock *condBB = llvm::BasicBlock::Create(*TheContext, "cond", TheFunction);
     llvm::BasicBlock *loopBB = llvm::BasicBlock::Create(*TheContext, "loop", TheFunction);
     llvm::BasicBlock *afterBB = llvm::BasicBlock::Create(*TheContext, "afterLoop", TheFunction);
@@ -915,10 +914,10 @@ llvm::Value *ForStatement::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"For Statement");
     this->generatePrologue(generator);
     //Init
-    llvm::Function *TheFunction = generator.getCurFunction();
+    llvm::Function *TheFunction = generator.funcStack.back();
     llvm::Value* startValue = this->value->codeGen(generator);
     llvm::Value* endValue = this->step->codeGen(generator);
-    llvm::Value *condValue = nullptr, *curValue = nullptr, *varValue = generator.findValue(this->var->getName());
+    llvm::Value *condValue = nullptr, *curValue = nullptr, *varValue = generator.getValueByName(this->var->getName());
     TheBuilder.CreateStore(startValue, varValue);
     
     llvm::BasicBlock *condBB = llvm::BasicBlock::Create(*TheContext, "cond", TheFunction);
@@ -961,7 +960,7 @@ llvm::Value *CaseStatement::codeGen(Generator & generator) {
     this->generatePrologue(generator);
     
     llvm::Value *cmpValue = this->value->codeGen(generator), *condValue = nullptr;
-    llvm::Function *TheFunction = generator.getCurFunction();
+    llvm::Function *TheFunction = generator.funcStack.back();
     llvm::BasicBlock *afterBB = llvm::BasicBlock::Create(*TheContext, "afterCase", TheFunction);
     vector<llvm::BasicBlock*> switchBBs, caseBBs;
     for (int i = 1; i <= this->caseExprList->size(); i++){
@@ -998,30 +997,30 @@ llvm::Value *CaseExpression::codeGen(Generator & generator) {
 }
 
 void Statement::generatePrologue(Generator & generator) {
-    llvm::Function *TheFunction = generator.getCurFunction();
-    cout << "generatePrologue: curlabel = " << this->label << endl;
+    llvm::Function *TheFunction = generator.funcStack.back();
+    // cout << "generatePrologue: curlabel = " << this->label << endl;
     if (this->label >= 0)
     {
-        if (generator.labelBlock[this->label] == nullptr) {
-            generator.labelBlock[this->label] = llvm::BasicBlock::Create(*TheContext, "Label_" + to_string(label), TheFunction);
+        if (generator.labelBlocks[this->label] == nullptr) {
+            generator.labelBlocks[this->label] = llvm::BasicBlock::Create(*TheContext, "startLabel" + to_string(this->label), TheFunction);
         }
-        if (this->afterBB == nullptr) {
-            this->afterBB = llvm::BasicBlock::Create(*TheContext, "afterLabel_" + to_string(this->label), TheFunction);
+        if (this->nextBlock == nullptr) {
+            this->nextBlock = llvm::BasicBlock::Create(*TheContext, "endLabel" + to_string(this->label), TheFunction);
         }
-        TheBuilder.CreateBr(generator.labelBlock[this->label]);
-        TheBuilder.SetInsertPoint(generator.labelBlock[this->label]);
+        TheBuilder.CreateBr(generator.labelBlocks[this->label]);
+        TheBuilder.SetInsertPoint(generator.labelBlocks[this->label]);
     }
 }
 
 void Statement::generateEpilogue(Generator & generator)
 {
-    cout << "generateEpilogue: curlabel = " << this->label << endl;
+    // cout << "generateEpilogue: curlabel = " << this->label << endl;
     // return;
-    if (this->label >= 0 && afterBB != nullptr)
+    if (this->label >= 0 && this->nextBlock != nullptr)
     {
-        TheBuilder.SetInsertPoint(generator.labelBlock[this->label]);
-        TheBuilder.CreateBr(this->afterBB);
-        TheBuilder.SetInsertPoint(this->afterBB);
+        TheBuilder.SetInsertPoint(generator.labelBlocks[this->label]);
+        TheBuilder.CreateBr(this->nextBlock);
+        TheBuilder.SetInsertPoint(this->nextBlock);
     }
 }
 
@@ -1029,15 +1028,13 @@ llvm::Value *GotoStatement::codeGen(Generator & generator) {
     echoInfo(__FILE__,__LINE__,"Goto Statement");
     this->generatePrologue(generator);
     llvm::Value *res = nullptr;
-    if (generator.labelBlock[this->toLabel] == nullptr) {
-        generator.labelBlock[this->toLabel] = llvm::BasicBlock::Create(*TheContext, "Label_" + to_string(this->toLabel), generator.getCurFunction());
+    if (generator.labelBlocks[this->targetLabel] == nullptr) {
+        generator.labelBlocks[this->targetLabel] = 
+        llvm::BasicBlock::Create(*TheContext, 
+        "startLabel" + to_string(this->targetLabel), 
+        generator.funcStack.back());
     }
-    res = TheBuilder.CreateBr(generator.labelBlock[this->toLabel]);
-//    if (this->afterBB == nullptr)
-//    {
-//        this->afterBB = llvm::BasicBlock::Create(*TheContext, "afterLabel_" + to_string(this->toLabel), generator.getCurFunction());
-//    }
-//    TheBuilder.SetInsertPoint(this->afterBB);
+    res = TheBuilder.CreateBr(generator.labelBlocks[this->targetLabel]);
     this->generateEpilogue(generator);
     return res;
 }
@@ -1054,20 +1051,17 @@ llvm::Value *CompoundStatement::codeGen(Generator & generator) {
 }
 
 string jsonfy(string name) {
-    return "{ \"name\" : \"" + name + "\" }";
+    return "{\"name\":\"" + name + "\"}";
 }
 
 string jsonfy(string name, vector<string> children) {
-    string result = "{ \"name\" : \"" + name + "\", \"children\" : [ ";
-    int i = 0;
-    for(auto &child : children) {
-        if(i != children.size() - 1)
-            result += child + ", ";
-        else 
-            result += child + " ";
-        i++;
+    string result = "{\"name\":\"" + name + "\", \"children\":[";
+    int i;
+    for (i = 0; i < children.size() - 1;i++){
+        result += children[i] + ",";
     }
-    return result + " ] }";
+    result += children[i] + "]}";
+    return result;
 }
 
 string jsonfy(string name, string value) {
@@ -1075,113 +1069,110 @@ string jsonfy(string name, string value) {
 }
 
 string jsonfy(string name, string value, vector<string> children) {
-    string result = "{ \"name\" : \"" + name + "\", \"value\" : \"" + value + "\", \"children\" : [ ";
-    int i = 0;
-    for(auto &child : children) {
-        if(i != children.size() - 1)
-            result += child + ", ";
-        else 
-            result += child + " ";
-        i++;
+    string result = "{\"name\":\"" + name + "\",\"value\":\"" + value + "\",\"children\":[";
+    int i;
+    for (i = 0; i < children.size() - 1;i++){
+        result += children[i] + ",";
     }
-    return result + " ] }";
+    result += children[i] + "]}";
+    return result;
 }
 
-string Program::getJson() {
-    return jsonfy("program", *programID, vector<string>{routine->getJson()});
+string Program::jsonGen() {
+    return jsonfy("program", *programID, vector<string>{routine->jsonGen()});
 }
 
-string Identifier::getJson() {
+string Identifier::jsonGen() {
     return jsonfy("Identifier", jsonfy(*name));
 }
 
-string Integer::getJson() {
+string Integer::jsonGen() {
     return jsonfy("Integer", jsonfy(to_string(value)));
 }
 
-string Real::getJson() {
+string Real::jsonGen() {
     return jsonfy("Real", jsonfy(to_string(value)));
 }
 
-string Char::getJson() {
+string Char::jsonGen() {
     return jsonfy("Char", jsonfy(string(1, value)));
 }
 
-string String::getJson() {
+string String::jsonGen() {
     return jsonfy("String", jsonfy(*value));
 }
-string Boolean::getJson() {
+string Boolean::jsonGen() {
     return jsonfy("Boolean", jsonfy((value ? "true" : "false")));
 }
 
-string ConstDeclaration::getJson() {
+string ConstDeclaration::jsonGen() {
     vector<string> children;
-    children.push_back(name->getJson());
-    children.push_back(value->getJson());
+    children.push_back(name->jsonGen());
+    children.push_back(value->jsonGen());
     return jsonfy("ConstDeclaration", children);
 }
 
-string EnumType::getJson() {
+string EnumType::jsonGen() {
     vector<string> children;
     for(auto &name : *enumList) {
-        children.push_back(name->getJson());
+        children.push_back(name->jsonGen());
     }
     return jsonfy("EnumType", children);
 }
 
-string AstArrayType::getJson() {
+string AstArrayType::jsonGen() {
     vector<string> children;
-    children.push_back(jsonfy("range", range->getJson()));
-    children.push_back(jsonfy("type", type->getJson()));
+    children.push_back(jsonfy("range", range->jsonGen()));
+    children.push_back(jsonfy("type", type->jsonGen()));
     return jsonfy("AstArrayType", children);
 }
 
-string ConstRangeType::getJson() {
+string ConstRangeType::jsonGen() {
     vector<string> children;
-    children.push_back(jsonfy("lowBound", lowBound->getJson()));
-    children.push_back(jsonfy("upBound", upBound->getJson()));
+    children.push_back(jsonfy("lowBound", lowBound->jsonGen()));
+    children.push_back(jsonfy("upBound", upBound->jsonGen()));
     return jsonfy("ConstRangeType", children);
 }
 
-string EnumRangeType::getJson() {
+string EnumRangeType::jsonGen() {
     vector<string> children;
-    children.push_back(jsonfy("lowBound", lowBound->getJson()));
-    children.push_back(jsonfy("upBound", upBound->getJson()));
+    children.push_back(jsonfy("lowBound", lowBound->jsonGen()));
+    children.push_back(jsonfy("upBound", upBound->jsonGen()));
     return jsonfy("EnumRangeType", children);
 }
 
-string FieldDeclaration::getJson() {
+string FieldDeclaration::jsonGen() {
     vector<string> children;
     vector<string> nameListJson;
     for(auto &name : *nameList) {
-        nameListJson.push_back(name->getJson());
+        nameListJson.push_back(name->jsonGen());
     }
     children.push_back(jsonfy("nameList", nameListJson));
-    children.push_back(jsonfy("type", type->getJson()));
+    children.push_back(jsonfy("type", type->jsonGen()));
     return jsonfy("FieldDeclaration", children);
 }
 
-string RecordType::getJson() {
+string RecordType::jsonGen() {
     vector<string> children;
     for(auto &field : *fieldList) {
-        children.push_back(field->getJson());
+        children.push_back(field->jsonGen());
     }
 
     return jsonfy("RecordType", children);
 }
 
-string AstType::getJson() {
+string AstType::jsonGen() {
     switch (type){
     case SPL_ARRAY:
-        return arrayType->getJson();
+        return arrayType->jsonGen();
     case SPL_RECORD:
-        return recordType->getJson();
+        return recordType->jsonGen();
     case SPL_ENUM:
-        return enumType->getJson();
+        return enumType->jsonGen();
     case SPL_CONST_RANGE:
-        return constRangeType->getJson();
+        return constRangeType->jsonGen();
     case SPL_ENUM_RANGE:
-        return enumRangeType->getJson();
+        return enumRangeType->jsonGen();
     case SPL_BUILD_IN:
         if (buildInType == "integer"){
             return jsonfy("SYS_TYPE", jsonfy("Integer"));
@@ -1204,85 +1195,111 @@ string AstType::getJson() {
     return nullptr;
 }
 
-string TypeDeclaration::getJson() {
+string TypeDeclaration::jsonGen() {
     vector<string> children;
-    children.push_back(name->getJson());
-    children.push_back(type->getJson());
+    children.push_back(name->jsonGen());
+    children.push_back(type->jsonGen());
     return jsonfy("TypeDeclaration", children);
 }
 
-string VarDeclaration::getJson() {
+string VarDeclaration::jsonGen() {
     vector<string> children;
     vector<string> nameListJson;
     for(auto &name : *nameList) {
-        nameListJson.push_back(name->getJson());
+        nameListJson.push_back(name->jsonGen());
     }
-    children.push_back(jsonfy("Type", type->getJson()));
+    children.push_back(jsonfy("Type", type->jsonGen()));
     children.push_back(jsonfy("NameList", nameListJson));
     return jsonfy("VarDeclaration", children);
 }
 
-string FuncDeclaration::getJson() {
+string FuncDeclaration::jsonGen() {
     vector<string> children;
-    children.push_back(name->getJson());
+    children.push_back(name->jsonGen());
     vector<string> paraListJson;
     for(auto &para : *paraList)
-        paraListJson.push_back(para->getJson());
+        paraListJson.push_back(para->jsonGen());
     children.push_back(jsonfy("ParaList", paraListJson));
-    children.push_back(returnType->getJson());
-    children.push_back(subRoutine->getJson());
+    children.push_back(returnType->jsonGen());
+    children.push_back(subRoutine->jsonGen());
 
     return jsonfy("FuncDeclaration", children);
 }
 
-string Parameter::getJson() {
-    vector<string> children;
-    vector<string> nameListJson;
-    for(auto &name : *nameList) {
-        nameListJson.push_back(name->getJson());
+string Parameter::jsonGen() {
+    vector<string> children, jsonVec;
+    for(auto &i : *nameList) {
+        jsonVec.push_back(i->jsonGen());
     }
-    children.push_back(jsonfy("Type", type->getJson()));
-    children.push_back(jsonfy("NameList", nameListJson));
+    children.push_back(jsonfy("Type", type->jsonGen()));
+    children.push_back(jsonfy("NameList", jsonVec));
     children.push_back(jsonfy("isVar", jsonfy((isVar ? "true" : "false" ))));
     return jsonfy("Parameter", children);
 }
 
-string Routine::getJson() {
-    vector<string> children;
-    vector<string> constJson, varJson, typeJson, routineJson;
-    for(auto constDecl : *constDeclList)
-        constJson.push_back(constDecl->getJson());
-    for(auto varDecl : *varDeclList)
-        varJson.push_back(varDecl->getJson());
-    for(auto typeDecl : *typeDeclList)
-        typeJson.push_back(typeDecl->getJson());
-    for(auto routineDecl : *routineList)
-        routineJson.push_back(routineDecl->getJson());
-    children.push_back(jsonfy("ConstDeclList", constJson));
-    children.push_back(jsonfy("VarDeclList", varJson)); 
-    children.push_back(jsonfy("TypeDeclList", typeJson));
-    children.push_back(jsonfy("RoutineDeclList", routineJson));
-    children.push_back(routineBody->getJson());
+string Routine::jsonGen() {
+    vector<string> children, jsonVec;
+    bool realInsert = false; // empty node will not be added into parse tree
+    for (auto i : *constDeclList){
+        realInsert = true;
+        jsonVec.push_back(i->jsonGen());
+    }
+    if (realInsert) {
+        realInsert = false;
+        children.push_back(jsonfy("ConstDeclList", jsonVec));
+        jsonVec.clear();
+    }
+    
+    for (auto i : *varDeclList){
+        realInsert = true;
+        jsonVec.push_back(i->jsonGen());
+    }
+    if (realInsert) {
+        realInsert = false;
+        children.push_back(jsonfy("VarDeclList", jsonVec));
+        jsonVec.clear();
+    }
+
+    for (auto i : *typeDeclList){
+        realInsert = true;
+        jsonVec.push_back(i->jsonGen());
+    }
+    if (realInsert) {
+        realInsert = false;
+        children.push_back(jsonfy("TypeDeclList", jsonVec));
+        jsonVec.clear();
+    }
+    
+    for (auto i : *routineList){
+        realInsert = true;
+        jsonVec.push_back(i->jsonGen());
+    }
+    if (realInsert) {
+        realInsert = false;
+        children.push_back(jsonfy("RoutineDeclList", jsonVec));
+        jsonVec.clear();
+    }
+    children.push_back(routineBody->jsonGen());
     return jsonfy("Routine", children);
 }
 
-string AssignStatement::getJson() {
+string AssignStatement::jsonGen() {
     vector<string> children;
     switch (type)
     {
     case ID_ASSIGN:
-        children.push_back(lhs->getJson());
-        children.push_back(rhs->getJson());
+        children.push_back(lhs->jsonGen());
+        children.push_back(rhs->jsonGen());
         break;
     case ARRAY_ASSIGN:
-        children.push_back(lhs->getJson());
-        children.push_back(sub->getJson());
-        children.push_back(rhs->getJson());
+        children.push_back(lhs->jsonGen());
+        children.push_back(sub->jsonGen());
+        children.push_back(rhs->jsonGen());
         break;
     case RECORD_ASSIGN:
-        children.push_back(lhs->getJson());
-        children.push_back(field->getJson());
-        children.push_back(rhs->getJson());
+        children.push_back(lhs->jsonGen());
+        children.push_back(field->jsonGen());
+        children.push_back(rhs->jsonGen());
         break;
     default:
         break;
@@ -1291,144 +1308,144 @@ string AssignStatement::getJson() {
     return jsonfy("AssignStatement", children);
 }
 
-string BinaryExpression::getJson() {
+string BinaryExpression::jsonGen() {
     vector<string> children;
-    children.push_back(lhs->getJson());
+    children.push_back(lhs->jsonGen());
     children.push_back(jsonfy(this->op));
-    children.push_back(rhs->getJson());
+    children.push_back(rhs->jsonGen());
 
     return jsonfy("BinaryExpression", children);
 }
 
-string ArrayReference::getJson() {
+string ArrayReference::jsonGen() {
     vector<string> children;
-    children.push_back(array->getJson());
-    children.push_back(index->getJson());
+    children.push_back(array->jsonGen());
+    children.push_back(index->jsonGen());
 
     return jsonfy("ArrayReference", children);
 }
 
-string RecordReference::getJson() {
+string RecordReference::jsonGen() {
     vector<string> children;
-    children.push_back(record->getJson());
-    children.push_back(field->getJson());
+    children.push_back(record->jsonGen());
+    children.push_back(field->jsonGen());
 
     return jsonfy("RecordReference", children);
 }
 
-string FunctionCall::getJson() {
+string FunctionCall::jsonGen() {
     vector<string> children;
-    children.push_back(function->getJson());
+    children.push_back(function->jsonGen());
     vector<string> argsJson;
     for(auto &arg : *args) {
-        argsJson.push_back(arg->getJson());
+        argsJson.push_back(arg->jsonGen());
     }
     children.push_back(jsonfy("ArgList", argsJson));
     return jsonfy("FunctionCall", children);
 }
 
-string ProcedureCall::getJson() {
+string ProcedureCall::jsonGen() {
     vector<string> children;
-    children.push_back(funcName->getJson());
+    children.push_back(funcName->jsonGen());
     vector<string> argsJson;
     for(auto &arg : *args) {
-        argsJson.push_back(arg->getJson());
+        argsJson.push_back(arg->jsonGen());
     }
     children.push_back(jsonfy("ArgList", argsJson));
     return jsonfy("ProcedureCall", children);
 }
 
-string SysFunctionCall::getJson() {
+string SysFunctionCall::jsonGen() {
     // cout << (this->funcName) << endl;
     vector<string> children;
     children.push_back(jsonfy("SysFunction", jsonfy(this->funcName)));
     vector<string> argsJson;
     for(auto &arg : *args) {
-        argsJson.push_back(arg->getJson());
+        argsJson.push_back(arg->jsonGen());
     }
     children.push_back(jsonfy("ArgList", argsJson));
     return jsonfy("SysFunctionCall", children);
 }
 
-string SysProcedureCall::getJson() {
+string SysProcedureCall::jsonGen() {
     vector<string> children;
     children.push_back(jsonfy("SysProcedure", jsonfy(*name)));
     vector<string> argsJson;
     for(auto &arg : *args) {
-        argsJson.push_back(arg->getJson());
+        argsJson.push_back(arg->jsonGen());
     }
     children.push_back(jsonfy("ArgList", argsJson));
     return jsonfy("SysProcedureCall", children);
 }
 
-string IfStatement::getJson() {
+string IfStatement::jsonGen() {
     vector<string> children;
-    children.push_back(condition->getJson());
-    children.push_back(thenStatement->getJson());
+    children.push_back(condition->jsonGen());
+    children.push_back(thenStatement->jsonGen());
     if(elseStatement)
-        children.push_back(elseStatement->getJson());
+        children.push_back(elseStatement->jsonGen());
 
     return jsonfy("IfStatement", children);
 }
 
-string RepeatStatement::getJson() {
+string RepeatStatement::jsonGen() {
     vector<string> children;
-    children.push_back(condition->getJson());
+    children.push_back(condition->jsonGen());
     vector<string> repeatStmtJson;
     for(auto &stmt : *repeatStatement)
-        repeatStmtJson.push_back(stmt->getJson());
+        repeatStmtJson.push_back(stmt->jsonGen());
     children.push_back(jsonfy("RepeatStatement", repeatStmtJson));
 
     return jsonfy("RepeatStatement", children);
 }
 
-string WhileStatement::getJson() {
+string WhileStatement::jsonGen() {
     vector<string> children;
-    children.push_back(condition->getJson());
-    children.push_back(stmt->getJson());
+    children.push_back(condition->jsonGen());
+    children.push_back(stmt->jsonGen());
 
     return jsonfy("WhileStatement", children);
 }
 
-string ForStatement::getJson() {
+string ForStatement::jsonGen() {
     vector<string> children;
-    children.push_back(var->getJson());
-    children.push_back(value->getJson());
+    children.push_back(var->jsonGen());
+    children.push_back(value->jsonGen());
     children.push_back(jsonfy("isAdd", jsonfy((isAdd ? "true" : "false"))));
-    children.push_back(step->getJson());
-    children.push_back(stmt->getJson());
+    children.push_back(step->jsonGen());
+    children.push_back(stmt->jsonGen());
 
     return jsonfy("ForStatement", children);
 }  
 
-string CaseStatement::getJson() {
+string CaseStatement::jsonGen() {
     vector<string> children;
-    children.push_back(value->getJson());
+    children.push_back(value->jsonGen());
     vector<string> caseExprJsonList;
     for(auto &caseExpr : *caseExprList) {
-        caseExprJsonList.push_back(caseExpr->getJson());
+        caseExprJsonList.push_back(caseExpr->jsonGen());
     }
     children.push_back(jsonfy("CaseExprList", caseExprJsonList));
 
     return jsonfy("CaseStatement", children);
 }    
 
-string CaseExpression::getJson() {
+string CaseExpression::jsonGen() {
     vector<string> children;
-    children.push_back(value->getJson());
-    children.push_back(stmt->getJson());
+    children.push_back(value->jsonGen());
+    children.push_back(stmt->jsonGen());
 
     return jsonfy("CaseExpression", children);
 }
 
-string GotoStatement::getJson() {
-    return jsonfy("GotoStatement", jsonfy(to_string(toLabel)));
+string GotoStatement::jsonGen() {
+    return jsonfy("GotoStatement", jsonfy(to_string(targetLabel)));
 }    
 
-string CompoundStatement::getJson() {
+string CompoundStatement::jsonGen() {
     vector<string> stmtJsonList;
     for(auto &stmt : *stmtList) {
-        stmtJsonList.push_back(stmt->getJson());
+        stmtJsonList.push_back(stmt->jsonGen());
     }
     return jsonfy("CompoundStatement", stmtJsonList);
 }
